@@ -55,6 +55,8 @@ jobs:
         done
         
         MATRIX="$MATRIX]"
+        # Убираем лишний символ новой строки
+        MATRIX=$(echo -n "$MATRIX")
         echo "Generated matrix: $MATRIX"
         
         # Сохраняем в output для использования в matrix
