@@ -76,7 +76,7 @@ jobs:
           # Парсим и показываем содержимое matrix
           echo "=== Parsed Matrix Content ==="
           echo "Matrix as parsed JSON:"
-          echo "$MATRIX" | jq '.' 2>/dev/null || echo "jq not available, raw: $MATRIX"
+          echo "::remove-mask::$MATRIX"
         else
           echo "❌ matrix output NOT found in GITHUB_OUTPUT"
         fi
