@@ -17,7 +17,7 @@ jobs:
       run: |
         # Читаем конфигурацию хостов из переменной
         echo "Loading hosts config..."
-        HOSTS_CONF_ENV="${{ secrets.HOSTS_CONFIG_ENV }}"
+        HOSTS_CONF_ENV="${{ secrets.HOSTS_CONF_ENV }}"
         
         # Создаем JSON массив для matrix
         MATRIX='['
