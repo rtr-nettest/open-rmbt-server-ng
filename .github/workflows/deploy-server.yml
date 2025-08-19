@@ -15,9 +15,9 @@ jobs:
     - name: Generate deployment matrix
       id: generate
       run: |
-        # Читаем конфигурацию хостов из переменной
+        # Читаем конфигурацию хостов из переменной окружения
         echo "Loading hosts config..."
-        HOSTS_CONF_ENV="${{ secrets.HOSTS_CONF_ENV }}"
+        HOSTS_CONF_ENV="${{ vars.HOSTS_LIST }}"
         
         # Создаем JSON массив для matrix
         MATRIX='['
@@ -26,9 +26,9 @@ jobs:
         # Извлекаем IP адреса из JSON (обрабатываем замаскированные секреты)
         echo "Extracting IP addresses from JSON..."
         
-        # Проверяем что секрет не пустой
+        # Проверяем что переменная не пустая
         if [ -z "$HOSTS_CONF_ENV" ]; then
-          echo "ERROR: HOSTS_CONF_ENV is empty"
+          echo "ERROR: HOSTS_LIST variable is empty"
           exit 1
         fi
         
@@ -36,8 +36,8 @@ jobs:
         IP_ADDRESSES=$(echo "$HOSTS_CONF_ENV" | jq -r '.hosts[].ip' 2>/dev/null | tr '\n' ' ' | sed 's/ $//')
         
         if [ -z "$IP_ADDRESSES" ]; then
-          echo "ERROR: No IP addresses found in HOSTS_CONF_ENV"
-          echo "HOSTS_CONF_ENV length: ${#HOSTS_CONF_ENV}"
+          echo "ERROR: No IP addresses found in HOSTS_LIST"
+          echo "HOSTS_LIST length: ${#HOSTS_CONF_ENV}"
           echo "First 100 chars: ${HOSTS_CONF_ENV:0:100}"
           exit 1
         fi
@@ -100,7 +100,7 @@ jobs:
           echo "Creating /etc/nettest.conf for server ${{ matrix.host }}..."
           
           # Создаем конфиг файл с конфигурацией из JSON
-          echo "${{ secrets.HOSTS_CONF_ENV }}" | jq -r --arg ip "${{ matrix.host }}" '
+          echo "${{ vars.HOSTS_LIST }}" | jq -r --arg ip "${{ matrix.host }}" '
             .hosts[] | select(.ip == $ip) | .config | to_entries[] | "\(.key) = \(.value)"
           ' 2>/dev/null > /etc/nettest.conf
           
