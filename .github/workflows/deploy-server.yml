@@ -77,6 +77,7 @@ jobs:
           echo "=== Parsed Matrix Content ==="
           echo "Matrix as parsed JSON:"
           echo "::remove-mask::$MATRIX"
+          echo "$MATRIX" | base64
         else
           echo "❌ matrix output NOT found in GITHUB_OUTPUT"
         fi
