@@ -24,7 +24,8 @@ jobs:
         FIRST=true
         
         # Извлекаем IP адреса из конфигурации
-        IP_ADDRESSES="139.162.150.114 139.162.150.115"
+        IP_ADDRESSES=$(grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" <<< "$HOSTS_CONF_ENV" | tr -d ' ')
+        
         
         if [ -z "$IP_ADDRESSES" ]; then
           exit 1
