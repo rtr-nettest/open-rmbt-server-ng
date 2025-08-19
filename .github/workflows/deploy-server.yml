@@ -15,11 +15,54 @@ jobs:
     - name: Generate deployment matrix
       id: generate
       run: |
+        # Читаем конфигурацию хостов из переменной
+        echo "Loading hosts config..."
         HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
         echo "Hosts config loaded"
-        echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
+        echo "HOSTS_CONFIG length: ${#HOSTS_CONFIG}"
+        # Извлекаем IP адреса для matrix
+        echo "Extracting IP addresses..."
+        IP_ADDRESSES=$(echo "$HOSTS_CONFIG" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" | tr -d ' ')
+        echo "Found IP_ADDRESSES: '$IP_ADDRESSES'"
+        echo "IP_ADDRESSES length: ${#IP_ADDRESSES}"
+        echo "IP_ADDRESSES count: $(echo "$IP_ADDRESSES" | wc -w)"
         
+        if [ -z "$IP_ADDRESSES" ]; then
+          echo "ERROR: No IP addresses found in HOSTS_CONFIG"
+          echo "HOSTS_CONFIG content:"
+          echo "$HOSTS_CONFIG"
+          exit 1
+        fi
         
+        # Создаем JSON массив для matrix
+        MATRIX='['
+        FIRST=true
+        
+        for IP in $IP_ADDRESSES; do
+          echo "Processing IP: $IP"
+          
+          # Добавляем запятую если не первый элемент
+          if [ "$FIRST" = true ]; then
+            FIRST=false
+          else
+            MATRIX="$MATRIX,"
+          fi
+          
+          # Добавляем элемент в matrix
+          MATRIX="$MATRIX{\"host\":\"$IP\"}"
+        done
+        
+        MATRIX="$MATRIX]"
+
+        HOSTS_CONFIG=1
+        
+        # Сохраняем в output для использования в matrix
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+        echo "Matrix output set: $MATRIX"
+        echo "GITHUB_OUTPUT content:"
+        cat $GITHUB_OUTPUT
+        
+
   deploy:
     needs: generate-matrix
     runs-on: ubuntu-latest
