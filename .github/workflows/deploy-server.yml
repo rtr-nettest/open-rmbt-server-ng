@@ -23,7 +23,7 @@ jobs:
         FIRST_HOSTS=true
         
         # Разбираем по строкам и ищем IP адреса
-        while IFS= read -r line; do
+        echo "$HOSTS_CONFIG" | while IFS= read -r line; do
           # Ищем строки с IP адресами (формат: IP:)
           if [[ "$line" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+: ]]; then
             # Извлекаем IP адрес
@@ -84,7 +84,7 @@ jobs:
             # Добавляем элемент в hosts_json с полной информацией
             HOSTS_JSON="$HOSTS_JSON{\"ip\":\"$IP\",\"hostname\":\"$HOSTNAME\",\"server_name\":\"$SERVER_NAME\"}"
           fi
-        done <<< "$HOSTS_CONFIG"
+        done
         
         MATRIX="$MATRIX]"
         HOSTS_JSON="$HOSTS_JSON]"
@@ -388,7 +388,7 @@ jobs:
           HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
           
           # Создаем временный файл с конфигурацией
-          cat > /tmp/server_config.conf << 'EOF'
+          cat > /tmp/server_config.conf << EOF
           $HOSTS_CONFIG
           EOF
           
