@@ -1,8 +1,10 @@
 name: Deploy Nettest Server
 
 on:
+  push:
+    branches: [ parser_update ]
+
   workflow_dispatch:
-    
 
 jobs:
   generate-matrix:
@@ -13,8 +15,72 @@ jobs:
     - name: Generate deployment matrix
       id: generate
       run: |
-       
-        echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
+        # Читаем конфигурацию хостов из переменной
+        echo "Loading hosts config..."
+        HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
+        echo "Hosts config loaded"
+        echo "HOSTS_CONFIG length: ${#HOSTS_CONFIG}"
+        echo "First 100 chars: ${HOSTS_CONFIG:0:100}"
+        
+        # Извлекаем IP адреса для matrix
+        echo "Extracting IP addresses..."
+        IP_ADDRESSES=$(echo "$HOSTS_CONFIG" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" | tr -d ' ')
+        echo "Found IP_ADDRESSES: '$IP_ADDRESSES'"
+        echo "IP_ADDRESSES length: ${#IP_ADDRESSES}"
+        echo "IP_ADDRESSES count: $(echo "$IP_ADDRESSES" | wc -w)"
+        
+        if [ -z "$IP_ADDRESSES" ]; then
+          echo "ERROR: No IP addresses found in HOSTS_CONFIG"
+          echo "HOSTS_CONFIG content:"
+          echo "$HOSTS_CONFIG"
+          exit 1
+        fi
+        
+        # Создаем JSON массив для matrix
+        MATRIX='['
+        FIRST=true
+        
+        for IP in $IP_ADDRESSES; do
+          echo "Processing IP: $IP"
+          
+          # Добавляем запятую если не первый элемент
+          if [ "$FIRST" = true ]; then
+            FIRST=false
+          else
+            MATRIX="$MATRIX,"
+          fi
+          
+          # Добавляем элемент в matrix
+          MATRIX="$MATRIX{\"host\":\"$IP\"}"
+        done
+        
+        MATRIX="$MATRIX]"
+        echo "Generated matrix: $MATRIX"
+        
+        # Сохраняем в output для использования в matrix
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+        echo "Matrix output set: $MATRIX"
+        echo "GITHUB_OUTPUT content:"
+        cat $GITHUB_OUTPUT
+        
+        # Сохраняем конфигурацию в файл для отладки
+        echo "=== Saving hosts config to file ==="
+        echo "$HOSTS_CONFIG" > hosts_config.txt
+        echo "IP_ADDRESSES: $IP_ADDRESSES" >> hosts_config.txt
+        echo "MATRIX: $MATRIX" >> hosts_config.txt
+        echo "GITHUB_OUTPUT content:" >> hosts_config.txt
+        cat $GITHUB_OUTPUT >> hosts_config.txt
+        
+        echo "Hosts config saved to hosts_config.txt"
+        ls -la hosts_config.txt
+        echo "File content:"
+        cat hosts_config.txt
+        
+    - name: Upload hosts config artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: hosts-config
+        path: hosts_config.txt
 
   deploy:
     needs: generate-matrix
@@ -25,6 +91,17 @@ jobs:
       fail-fast: false
     
     steps:
+    - name: Debug matrix
+      run: |
+        echo "=== DEBUG: Matrix in deploy job ==="
+        echo "matrix.host: '${{ matrix.host }}'"
+        echo "matrix context: ${{ toJSON(matrix) }}"
+        echo "needs.generate-matrix.outputs.matrix: '${{ needs.generate-matrix.outputs.matrix }}'"
+        
+        # Дополнительная отладка
+        echo "=== Additional Debug Info ==="
+        echo "Matrix content: ${{ needs.generate-matrix.outputs.matrix }}"
+        
     - name: Checkout code
       uses: actions/checkout@v3
       
@@ -42,13 +119,46 @@ jobs:
           
           # Создаем конфигурационный файл
           echo "Creating /etc/nettest.conf..."
-          cat > /etc/nettest.conf << 'EOF'
-          ${{ secrets[matrix.config_var] }}
-          cert_path = "/root/specure-cd.crt"
-          key_path = "/root/specure-cd.key"
-          EOF
+          
+          # Извлекаем конфигурацию для конкретного сервера из HOSTS_CONFIG
+          HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
+          
+          # Создаем временный файл с конфигурацией (используем heredoc без подстановки)
+          cat > /tmp/server_config.conf << 'CONFIG_EOF'
+          $HOSTS_CONFIG
+          CONFIG_EOF
+          
+          # Извлекаем конфигурацию для конкретного IP
+          awk -v ip="${{ matrix.host }}" '
+          BEGIN { in_config = 0; config_found = 0; }
+          /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {
+              if ($0 == ip) {
+                  in_config = 1;
+                  config_found = 1;
+                  next;
+              } else {
+                  in_config = 0;
+              }
+          }
+          /^---$/ {
+              # Разделитель между серверами
+              in_config = 0;
+              next;
+          }
+          in_config && /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*=/ {
+              # Извлекаем все строки конфигурации
+              gsub(/^[[:space:]]*/, "");
+              print;
+          }
+          ' /tmp/server_config.conf > /etc/nettest.conf
+          
+          # Добавляем пути к сертификатам
+          echo "cert_path = \"/root/specure-cd.crt\"" >> /etc/nettest.conf
+          echo "key_path = \"/root/specure-cd.key\"" >> /etc/nettest.conf
           
           echo "Configuration file created successfully"
+          echo "Content of /etc/nettest.conf:"
+          cat /etc/nettest.conf
           
           # Загружаем TLS сертификаты
           echo "Uploading TLS certificates..."
