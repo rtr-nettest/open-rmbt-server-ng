@@ -1,6 +1,9 @@
 name: Deploy Nettest Server
 
 on:
+  push:
+    branches: [ parser_update ]
+
   workflow_dispatch:
 
 jobs:
@@ -73,10 +76,8 @@ jobs:
           # Извлекаем конфигурацию для конкретного сервера из HOSTS_CONFIG
           HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
           
-          # Создаем временный файл с конфигурацией (используем heredoc с экранированием)
-          cat > /tmp/server_config.conf << 'CONFIG_EOF'
-          $HOSTS_CONFIG
-          CONFIG_EOF
+          # Создаем временный файл с конфигурацией (используем base64 для полной безопасности)
+          echo "$HOSTS_CONFIG" | base64 -d > /tmp/server_config.conf 2>/dev/null || printf '%s\n' "$HOSTS_CONFIG" > /tmp/server_config.conf
           
           # Извлекаем конфигурацию для конкретного IP
           awk -v ip="${{ matrix.host }}" '
