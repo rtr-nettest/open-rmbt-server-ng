@@ -75,6 +75,10 @@ jobs:
         else
           echo "❌ matrix output NOT found in GITHUB_OUTPUT"
         fi
+        
+        # Дополнительная проверка
+        echo "Final matrix value: $MATRIX"
+        echo "Matrix output line: matrix=$MATRIX"
 
   deploy:
     needs: generate-matrix
