@@ -24,20 +24,16 @@ jobs:
         FIRST=true
         
         # Извлекаем IP адреса из конфигурации
-        IP_ADDRESSES=""
-        while IFS= read -r block; do
-            # Убираем пустые строки и берем первую строку
-            FIRST_LINE=$(echo "$block" | grep -v '^[[:space:]]*$' | head -1)
-            if [[ $FIRST_LINE =~ ^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-                IP_ADDRESSES="$IP_ADDRESSES ${BASH_REMATCH[1]}"
-            fi
-        done < <(echo "$HOSTS_CONF_ENV" | sed 's/---/\n---\n/g' | awk 'BEGIN{RS="---"} {gsub(/^\n|\n$/, ""); if ($0 != "") print}')
-        IP_ADDRESSES="${IP_ADDRESSES# }"  # убираем первый пробел
-        
+        echo "Extracting IP addresses..."
+        IP_ADDRESSES=$(grep -E "^[[:space:]]*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" <<< "$HOSTS_CONF_ENV" | sed 's/^[[:space:]]*//' | tr '\n' ' ' | sed 's/ $//')
         
         if [ -z "$IP_ADDRESSES" ]; then
+          echo "ERROR: No IP addresses found in HOSTS_CONF_ENV"
+          echo "HOSTS_CONF_ENV content:"
+          echo "$HOSTS_CONF_ENV"
           exit 1
         fi
+        
         
         for IP in $IP_ADDRESSES; do
           if [ "$FIRST" = true ]; then
