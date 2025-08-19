@@ -19,8 +19,6 @@ jobs:
         echo "Loading hosts config..."
         HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
         echo "Hosts config loaded"
-        echo "HOSTS_CONFIG length: ${#HOSTS_CONFIG}"
-        echo "First 100 chars: ${HOSTS_CONFIG:0:100}"
         
     
         echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
