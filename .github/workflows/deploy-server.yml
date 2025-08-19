@@ -24,7 +24,13 @@ jobs:
         FIRST=true
         
         # Извлекаем IP адреса из конфигурации
-        IP_ADDRESSES=$(grep -E "^[[:space:]]*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" <<< "$HOSTS_CONF_ENV" | tr -d ' ')
+        IP_ADDRESSES=""
+        while IFS= read -r line; do
+            if [[ $line =~ ^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+                IP_ADDRESSES="$IP_ADDRESSES ${BASH_REMATCH[1]}"
+            fi
+        done <<< "$HOSTS_CONF_ENV"
+        IP_ADDRESSES="${IP_ADDRESSES# }"  # убираем первый пробел
         
         
         if [ -z "$IP_ADDRESSES" ]; then
