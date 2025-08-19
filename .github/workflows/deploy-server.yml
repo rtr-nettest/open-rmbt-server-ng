@@ -24,8 +24,7 @@ jobs:
         FIRST=true
         
         # Извлекаем IP адреса из конфигурации
-        echo "Extracting IP addresses..."
-        IP_ADDRESSES=$(printf '%s' "$HOSTS_CONF_ENV" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" | tr -d ' ')
+        IP_ADDRESSES=$(grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" <<< "$HOSTS_CONF_ENV" | tr -d ' ')
         
         if [ -z "$IP_ADDRESSES" ]; then
           exit 1
@@ -42,7 +41,6 @@ jobs:
         done
         
         MATRIX="$MATRIX]"
-        MATRIX=$(printf '%s' "$MATRIX") # Убираем trailing newline
         
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
         
