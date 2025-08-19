@@ -79,12 +79,19 @@ jobs:
   deploy:
     needs: generate-matrix
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-      fail-fast: false
-    
     steps:
+    - name: Debug matrix
+      run: |
+        echo "Debugging matrix..."
+        echo "needs.generate-matrix.outputs.matrix: '${{ needs.generate-matrix.outputs.matrix }}'"
+        echo "Matrix length: ${{ length(needs.generate-matrix.outputs.matrix) }}"
+        echo "Matrix type: ${{ toJSON(needs.generate-matrix.outputs.matrix) }}"
+        
+        if [ -z "${{ needs.generate-matrix.outputs.matrix }}" ]; then
+          echo "ERROR: Matrix is empty!"
+          exit 1
+        fi
+        
     - name: Checkout code
       uses: actions/checkout@v3
       
