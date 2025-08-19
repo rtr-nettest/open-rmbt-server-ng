@@ -84,8 +84,7 @@ jobs:
       run: |
         echo "Debugging matrix..."
         echo "needs.generate-matrix.outputs.matrix: '${{ needs.generate-matrix.outputs.matrix }}'"
-        echo "Matrix length: ${{ length(needs.generate-matrix.outputs.matrix) }}"
-        echo "Matrix type: ${{ toJSON(needs.generate-matrix.outputs.matrix) }}"
+        echo "Matrix content: ${{ needs.generate-matrix.outputs.matrix }}"
         
         if [ -z "${{ needs.generate-matrix.outputs.matrix }}" ]; then
           echo "ERROR: Matrix is empty!"
