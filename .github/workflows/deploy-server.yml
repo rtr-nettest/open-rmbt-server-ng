@@ -60,6 +60,21 @@ jobs:
         echo "Matrix output set: $MATRIX"
         echo "GITHUB_OUTPUT content:"
         cat $GITHUB_OUTPUT
+        
+        # Выводим содержимое по частям для отладки
+        echo "=== DEBUG: Matrix content ==="
+        echo "Raw MATRIX variable: $MATRIX"
+        echo "Matrix length: ${#MATRIX}"
+        echo "First 100 chars: ${MATRIX:0:100}"
+        echo "Last 100 chars: ${MATRIX: -100}"
+        
+        # Проверяем, что output действительно записался
+        if grep -q "matrix=" $GITHUB_OUTPUT; then
+          echo "✅ matrix output found in GITHUB_OUTPUT"
+          echo "Output line: $(grep 'matrix=' $GITHUB_OUTPUT)"
+        else
+          echo "❌ matrix output NOT found in GITHUB_OUTPUT"
+        fi
 
   deploy:
     needs: generate-matrix
