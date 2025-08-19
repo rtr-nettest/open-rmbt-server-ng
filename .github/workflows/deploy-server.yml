@@ -15,6 +15,7 @@ jobs:
     - name: Generate deployment matrix
       id: generate
       run: |
+        HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
         echo "Hosts config loaded"
         echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
         
