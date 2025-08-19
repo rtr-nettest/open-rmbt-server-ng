@@ -76,8 +76,10 @@ jobs:
           # Извлекаем конфигурацию для конкретного сервера из HOSTS_CONFIG
           HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
           
-          # Создаем временный файл с конфигурацией (используем base64 для полной безопасности)
-          echo "$HOSTS_CONFIG" | base64 -d > /tmp/server_config.conf 2>/dev/null || printf '%s\n' "$HOSTS_CONFIG" > /tmp/server_config.conf
+          # Создаем временный файл с конфигурацией (используем heredoc без подстановки)
+          cat > /tmp/server_config.conf << 'CONFIG_EOF'
+          $HOSTS_CONFIG
+          CONFIG_EOF
           
           # Извлекаем конфигурацию для конкретного IP
           awk -v ip="${{ matrix.host }}" '
