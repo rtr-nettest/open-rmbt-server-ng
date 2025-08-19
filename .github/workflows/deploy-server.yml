@@ -26,6 +26,8 @@ jobs:
         echo "Extracting IP addresses..."
         IP_ADDRESSES=$(echo "$HOSTS_CONFIG" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" | tr -d ' ')
         echo "Found IP_ADDRESSES: '$IP_ADDRESSES'"
+        echo "IP_ADDRESSES length: ${#IP_ADDRESSES}"
+        echo "IP_ADDRESSES count: $(echo "$IP_ADDRESSES" | wc -w)"
         
         if [ -z "$IP_ADDRESSES" ]; then
           echo "ERROR: No IP addresses found in HOSTS_CONFIG"
@@ -34,26 +36,47 @@ jobs:
           exit 1
         fi
         
-        # Создаем простую строку с IP адресами, разделенными пробелами
-        MATRIX_STRING=$(echo "$IP_ADDRESSES" | tr '\n' ' ' | xargs)
-        echo "Generated matrix string: '$MATRIX_STRING'"
+        # Создаем JSON массив для matrix
+        MATRIX='['
+        FIRST=true
+        
+        for IP in $IP_ADDRESSES; do
+          echo "Processing IP: $IP"
+          
+          # Добавляем запятую если не первый элемент
+          if [ "$FIRST" = true ]; then
+            FIRST=false
+          else
+            MATRIX="$MATRIX,"
+          fi
+          
+          # Добавляем элемент в matrix
+          MATRIX="$MATRIX{\"host\":\"$IP\"}"
+        done
+        
+        MATRIX="$MATRIX]"
+        echo "Generated matrix: $MATRIX"
         
         # Сохраняем в output для использования в matrix
-        echo "matrix=$MATRIX_STRING" >> $GITHUB_OUTPUT
-        echo "Matrix output set: $MATRIX_STRING"
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+        echo "Matrix output set: $MATRIX"
         echo "GITHUB_OUTPUT content:"
         cat $GITHUB_OUTPUT
         
         # Выводим содержимое по частям для отладки
         echo "=== DEBUG: Matrix content ==="
-        echo "Raw MATRIX_STRING variable: $MATRIX_STRING"
-        echo "Matrix string length: ${#MATRIX_STRING}"
-        echo "IP addresses count: $(echo "$MATRIX_STRING" | wc -w)"
+        echo "Raw MATRIX variable: $MATRIX"
+        echo "Matrix length: ${#MATRIX}"
         
         # Проверяем, что output действительно записался
         if grep -q "matrix=" $GITHUB_OUTPUT; then
           echo "✅ matrix output found in GITHUB_OUTPUT"
           echo "Output line: $(grep 'matrix=' $GITHUB_OUTPUT)"
+          
+          # Парсим и показываем содержимое matrix
+          echo "=== Parsed Matrix Content ==="
+          echo "Matrix as parsed JSON:"
+          echo "$MATRIX" | jq '.' 2>/dev/null || echo "jq not available, raw: $MATRIX"
         else
           echo "❌ matrix output NOT found in GITHUB_OUTPUT"
         fi
@@ -63,10 +86,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        host: ${{ needs.generate-matrix.outputs.matrix }}
+        include: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
       fail-fast: false
     
     steps:
+    - name: Debug matrix
+      run: |
+        echo "=== DEBUG: Matrix in deploy job ==="
+        echo "matrix.host: '${{ matrix.host }}'"
+        echo "matrix context: ${{ toJSON(matrix) }}"
+        echo "needs.generate-matrix.outputs.matrix: '${{ needs.generate-matrix.outputs.matrix }}'"
+        
+        # Дополнительная отладка
+        echo "=== Additional Debug Info ==="
+        echo "Matrix type: ${{ type(needs.generate-matrix.outputs.matrix) }}"
+        echo "Matrix length: ${{ length(needs.generate-matrix.outputs.matrix) }}"
+        
     - name: Checkout code
       uses: actions/checkout@v3
       
