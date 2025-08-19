@@ -58,7 +58,7 @@ jobs:
         echo "Generated matrix: $MATRIX"
         
         # Сохраняем в output для использования в matrix
-        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+        echo "matrix=[{"host":"139.162.150.114","config_var":"PROD_MACHINE_FRANKFURT2025_139_162_150_114"}]" >> $GITHUB_OUTPUT
         echo "Matrix output set: $MATRIX"
         echo "GITHUB_OUTPUT content:"
         cat $GITHUB_OUTPUT
