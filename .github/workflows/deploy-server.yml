@@ -99,8 +99,7 @@ jobs:
         
         # Дополнительная отладка
         echo "=== Additional Debug Info ==="
-        echo "Matrix type: ${{ type(needs.generate-matrix.outputs.matrix) }}"
-        echo "Matrix length: ${{ length(needs.generate-matrix.outputs.matrix) }}"
+        echo "Matrix content: ${{ needs.generate-matrix.outputs.matrix }}"
         
     - name: Checkout code
       uses: actions/checkout@v3
