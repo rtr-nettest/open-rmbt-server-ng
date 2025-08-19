@@ -55,52 +55,10 @@ jobs:
         done
         
         MATRIX="$MATRIX]"
-        # Убираем лишний символ новой строки
-        MATRIX=$(echo -n "$MATRIX")
-        echo "Generated matrix: $MATRIX"
-        
-        # Сохраняем в output для использования в matrix
-        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-        echo "Matrix output set: $MATRIX"
-        echo "GITHUB_OUTPUT content:"
-        cat $GITHUB_OUTPUT
-        
-        # Детальная проверка matrix на скрытые символы
-        echo "=== DEBUG: Matrix character analysis ==="
-        echo "Matrix length: ${#MATRIX}"
-        echo "Matrix hex dump:"
-        echo "$MATRIX" | xxd -g 1 2>/dev/null || echo "xxd not available"
-        echo "Matrix octal dump:"
-        echo "$MATRIX" | od -c 2>/dev/null || echo "od not available"
-        echo "Matrix with visible control chars:"
-        echo "$MATRIX" | cat -A 2>/dev/null || echo "cat -A not available"
-        
-        # Проверяем каждый символ
-        echo "=== Character by character analysis ==="
-        for i in $(seq 0 $((${#MATRIX}-1))); do
-          char="${MATRIX:$i:1}"
-          printf "Char %2d: '%s' (ASCII: %d, Hex: %02x)\n" $i "$char" "'$char" "'$char"
-        done
-        
-        # Сохраняем конфигурацию в файл для отладки
-        echo "=== Saving hosts config to file ==="
-        echo "$HOSTS_CONFIG" > hosts_config.txt
-        echo "IP_ADDRESSES: $IP_ADDRESSES" >> hosts_config.txt
-        echo "MATRIX: $MATRIX" >> hosts_config.txt
-        echo "GITHUB_OUTPUT content:" >> hosts_config.txt
-        cat $GITHUB_OUTPUT >> hosts_config.txt
-        
-        echo "Hosts config saved to hosts_config.txt"
-        ls -la hosts_config.txt
-        echo "File content:"
-        cat hosts_config.txt
-        
-    - name: Upload hosts config artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: hosts-config
-        path: hosts_config.txt
 
+        echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
+        
+        
   deploy:
     needs: generate-matrix
     runs-on: ubuntu-latest
