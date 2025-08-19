@@ -23,9 +23,9 @@ jobs:
         MATRIX='['
         FIRST=true
         
-        # Извлекаем IP адреса из конфигурации
-        echo "Extracting IP addresses..."
-        IP_ADDRESSES=$(grep -E "^[[:space:]]*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" <<< "$HOSTS_CONF_ENV" | sed 's/^[[:space:]]*//' | tr '\n' ' ' | sed 's/ $//')
+        # Извлекаем IP адреса из JSON
+        echo "Extracting IP addresses from JSON..."
+        IP_ADDRESSES=$(echo "$HOSTS_CONF_ENV" | jq -r '.hosts[].ip' | tr '\n' ' ')
         
         if [ -z "$IP_ADDRESSES" ]; then
           echo "ERROR: No IP addresses found in HOSTS_CONF_ENV"
@@ -33,7 +33,6 @@ jobs:
           echo "$HOSTS_CONF_ENV"
           exit 1
         fi
-        
         
         for IP in $IP_ADDRESSES; do
           if [ "$FIRST" = true ]; then
@@ -47,7 +46,8 @@ jobs:
         
         MATRIX="$MATRIX]"
         
-        echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
+        echo "Generated matrix: $MATRIX"
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
         
 
   deploy:
@@ -88,41 +88,15 @@ jobs:
           # Создаем конфигурационный файл
           echo "Creating /etc/nettest.conf..."
           
-          # Извлекаем конфигурацию для конкретного сервера из HOSTS_CONF_ENV
-          HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG_ENV }}"
+          # Извлекаем конфигурацию для конкретного сервера из JSON
+          echo "Creating /etc/nettest.conf for server ${{ matrix.host }}..."
           
-          # Создаем временный файл с конфигурацией (используем heredoc без подстановки)
-          cat > /tmp/server_config.conf << 'CONFIG_EOF'
-          $HOSTS_CONFIG
-          CONFIG_EOF
+          # Создаем конфиг файл с конфигурацией из JSON
+          echo "${{ secrets.HOSTS_CONF_ENV }}" | jq -r --arg ip "${{ matrix.host }}" '
+            .hosts[] | select(.ip == $ip) | .config | to_entries[] | "\(.key) = \(.value)"
+          ' > /etc/nettest.conf
           
-          # Извлекаем конфигурацию для конкретного IP
-          awk -v ip="${{ matrix.host }}" '
-          BEGIN { in_config = 0; config_found = 0; }
-          /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {
-              if ($0 == ip) {
-                  in_config = 1;
-                  config_found = 1;
-                  next;
-              } else {
-                  in_config = 0;
-              }
-          }
-          /^---$/ {
-              # Разделитель между серверами
-              in_config = 0;
-              next;
-          }
-          in_config && /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*=/ {
-              # Извлекаем все строки конфигурации
-              gsub(/^[[:space:]]*/, "");
-              print;
-          }
-          ' /tmp/server_config.conf > /etc/nettest.conf
-          
-          # Добавляем пути к сертификатам
-          echo "cert_path = \"/root/specure-cd.crt\"" >> /etc/nettest.conf
-          echo "key_path = \"/root/specure-cd.key\"" >> /etc/nettest.conf
+
           
           echo "Configuration file created successfully"
           echo "Content of /etc/nettest.conf:"
