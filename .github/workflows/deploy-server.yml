@@ -23,14 +23,22 @@ jobs:
         MATRIX='['
         FIRST=true
         
-        # Извлекаем IP адреса из JSON
+        # Извлекаем IP адреса из JSON (обрабатываем замаскированные секреты)
         echo "Extracting IP addresses from JSON..."
-        IP_ADDRESSES=$(echo "$HOSTS_CONF_ENV" | jq -r '.hosts[].ip' | tr '\n' ' ')
+        
+        # Проверяем что секрет не пустой
+        if [ -z "$HOSTS_CONF_ENV" ]; then
+          echo "ERROR: HOSTS_CONF_ENV is empty"
+          exit 1
+        fi
+        
+        # Пытаемся извлечь IP адреса
+        IP_ADDRESSES=$(echo "$HOSTS_CONF_ENV" | jq -r '.hosts[].ip' 2>/dev/null | tr '\n' ' ' | sed 's/ $//')
         
         if [ -z "$IP_ADDRESSES" ]; then
           echo "ERROR: No IP addresses found in HOSTS_CONF_ENV"
-          echo "HOSTS_CONF_ENV content:"
-          echo "$HOSTS_CONF_ENV"
+          echo "HOSTS_CONF_ENV length: ${#HOSTS_CONF_ENV}"
+          echo "First 100 chars: ${HOSTS_CONF_ENV:0:100}"
           exit 1
         fi
         
@@ -94,7 +102,13 @@ jobs:
           # Создаем конфиг файл с конфигурацией из JSON
           echo "${{ secrets.HOSTS_CONF_ENV }}" | jq -r --arg ip "${{ matrix.host }}" '
             .hosts[] | select(.ip == $ip) | .config | to_entries[] | "\(.key) = \(.value)"
-          ' > /etc/nettest.conf
+          ' 2>/dev/null > /etc/nettest.conf
+          
+          # Проверяем что конфиг создался
+          if [ ! -s /etc/nettest.conf ]; then
+            echo "ERROR: Failed to create config file from JSON"
+            exit 1
+          fi
           
 
           
