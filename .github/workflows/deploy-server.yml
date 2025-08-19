@@ -34,13 +34,30 @@ jobs:
           exit 1
         fi
         
-        # Создаем простую строку с IP адресами, разделенными пробелами
-        MATRIX_STRING=$(echo "$IP_ADDRESSES" | tr '\n' ' ')
-        echo "Generated matrix string: '$MATRIX_STRING'"
+        # Создаем JSON массив для matrix
+        MATRIX='['
+        FIRST=true
+        
+        for IP in $IP_ADDRESSES; do
+          echo "Processing IP: $IP"
+          
+          # Добавляем запятую если не первый элемент
+          if [ "$FIRST" = true ]; then
+            FIRST=false
+          else
+            MATRIX="$MATRIX,"
+          fi
+          
+          # Добавляем элемент в matrix
+          MATRIX="$MATRIX{\"host\":\"$IP\"}"
+        done
+        
+        MATRIX="$MATRIX]"
+        echo "Generated matrix: $MATRIX"
         
         # Сохраняем в output для использования в matrix
-        echo "matrix=$MATRIX_STRING" >> $GITHUB_OUTPUT
-        echo "Matrix output set: $MATRIX_STRING"
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+        echo "Matrix output set: $MATRIX"
         echo "GITHUB_OUTPUT content:"
         cat $GITHUB_OUTPUT
 
@@ -49,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        host: ${{ split(needs.generate-matrix.outputs.matrix, ' ') }}
+        include: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
       fail-fast: false
     
     steps:
