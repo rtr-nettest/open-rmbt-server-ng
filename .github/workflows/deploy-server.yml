@@ -17,6 +17,7 @@ jobs:
       run: |
         # Читаем конфигурацию хостов из переменной
         echo "Loading hosts config..."
+        HOSTS_CONF_ENV="$HOSTS_CONFIG_ENV"
         echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
         
 
