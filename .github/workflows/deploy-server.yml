@@ -56,7 +56,11 @@ jobs:
         echo "Generated matrix: $MATRIX"
         
         # Сохраняем в output для использования в matrix
-        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+        {
+          echo 'matrix<<EOF'
+          echo "$MATRIX"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
         echo "Matrix output set: $MATRIX"
         echo "GITHUB_OUTPUT content:"
         cat $GITHUB_OUTPUT
