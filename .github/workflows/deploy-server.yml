@@ -18,7 +18,33 @@ jobs:
         # Читаем конфигурацию хостов из переменной
         echo "Loading hosts config..."
         HOSTS_CONF_ENV="${{ secrets.HOSTS_CONFIG_ENV }}"
-        echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
+        
+        # Создаем JSON массив для matrix
+        MATRIX='['
+        FIRST=true
+        
+        # Извлекаем IP адреса из конфигурации
+        echo "Extracting IP addresses..."
+        IP_ADDRESSES=$(printf '%s' "$HOSTS_CONF_ENV" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" | tr -d ' ')
+        
+        if [ -z "$IP_ADDRESSES" ]; then
+          exit 1
+        fi
+        
+        for IP in $IP_ADDRESSES; do
+          if [ "$FIRST" = true ]; then
+            FIRST=false
+          else
+            MATRIX="$MATRIX,"
+          fi
+          
+          MATRIX="$MATRIX{\"host\":\"$IP\"}"
+        done
+        
+        MATRIX="$MATRIX]"
+        MATRIX=$(printf '%s' "$MATRIX") # Убираем trailing newline
+        
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
         
 
   deploy:
@@ -59,8 +85,8 @@ jobs:
           # Создаем конфигурационный файл
           echo "Creating /etc/nettest.conf..."
           
-          # Извлекаем конфигурацию для конкретного сервера из HOSTS_CONFIG
-          HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
+          # Извлекаем конфигурацию для конкретного сервера из HOSTS_CONF_ENV
+          HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG_ENV }}"
           
           # Создаем временный файл с конфигурацией (используем heredoc без подстановки)
           cat > /tmp/server_config.conf << 'CONFIG_EOF'
