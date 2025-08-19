@@ -74,9 +74,7 @@ jobs:
           HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
           
           # Создаем временный файл с конфигурацией
-          cat > /tmp/server_config.conf << 'EOF'
-          $HOSTS_CONFIG
-          EOF
+          echo "$HOSTS_CONFIG" > /tmp/server_config.conf
           
           # Извлекаем конфигурацию для конкретного IP
           awk -v ip="${{ matrix.host }}" '
