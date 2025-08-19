@@ -10,7 +10,7 @@ jobs:
   generate-matrix:
     runs-on: ubuntu-latest
     outputs:
-      hosts_matrix: ${{ steps.generate.outputs.hosts_matrix }}
+      matrix: ${{ steps.generate.outputs.matrix }}
     steps:
     - name: Generate deployment matrix
       id: generate
@@ -56,8 +56,8 @@ jobs:
         echo "Generated matrix: $MATRIX"
         
         # Сохраняем в output для использования в matrix
-        echo "hosts_matrix=$MATRIX" >> $GITHUB_OUTPUT
-        echo "Hosts matrix output set: $MATRIX"
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+        echo "Matrix output set: $MATRIX"
         echo "GITHUB_OUTPUT content:"
         cat $GITHUB_OUTPUT
 
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include: ${{ fromJson(needs.generate-matrix.outputs.hosts_matrix) }}
+        include: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
       fail-fast: false
     
     steps:
