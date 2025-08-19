@@ -16,6 +16,7 @@ jobs:
       id: generate
       run: |
         # Читаем конфигурацию хостов из переменной
+        echo "Loading hosts config..."
         HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
         echo "Hosts config loaded"
         
