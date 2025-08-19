@@ -12,45 +12,347 @@ jobs:
     - name: Generate deployment matrix
       id: generate
       run: |
-        # Читаем список хостов из переменной
-        HOSTS_LIST="${{ secrets.HOSTS_LIST }}"
-        echo "Hosts list: $HOSTS_LIST"
+        # Читаем конфигурацию хостов из переменной
+        HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
+        echo "Hosts config loaded"
         
-        # Создаем JSON массив для matrix
+        # Создаем JSON массивы для matrix и hosts
         MATRIX='['
-        FIRST=true
+        HOSTS_JSON='['
+        FIRST_MATRIX=true
+        FIRST_HOSTS=true
         
-        # Разбираем список хостов (разделенный точкой с запятой)
-        IFS=';' read -ra HOSTS <<< "$HOSTS_LIST"
-        
-        for HOST_VAR in "${HOSTS[@]}"; do
-          # Убираем пробелы
-          HOST_VAR=$(echo "$HOST_VAR" | xargs)
-          
-          if [ ! -z "$HOST_VAR" ]; then
-            # Извлекаем IP адрес из названия переменной
-            # Формат: PROD_MACHINE_SERVERNAME_IP1_IP2_IP3_IP4
-            IP=$(echo "$HOST_VAR" | sed 's/.*_\([0-9]\{1,3\}_[0-9]\{1,3\}_[0-9]\{1,3\}_[0-9]\{1,3\}\)$/\1/' | tr '_' '.')
+        # Разбираем по строкам и ищем IP адреса
+        while IFS= read -r line; do
+          # Ищем строки с IP адресами (формат: IP:)
+          if [[ "$line" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+: ]]; then
+            # Извлекаем IP адрес
+            IP=$(echo "$line" | cut -d':' -f1)
+            echo "Found IP: $IP"
             
-            echo "Processing: $HOST_VAR -> IP: $IP"
+            # Следующие строки до следующего IP - это конфигурация
+            CONFIG=""
+            HOSTNAME=""
+            SERVER_NAME=""
             
-            # Добавляем запятую если не первый элемент
-            if [ "$FIRST" = true ]; then
-              FIRST=false
+            # Читаем следующие строки до следующего IP или конца
+            while IFS= read -r config_line; do
+              # Если встретили новый IP, прерываем
+              if [[ "$config_line" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+: ]]; then
+                # Возвращаем строку обратно в поток
+                echo "$config_line" >&2
+                break
+              fi
+              
+              # Добавляем в конфигурацию
+              if [[ "$config_line" =~ ^[[:space:]]*config:[[:space:]]*\| ]]; then
+                # Пропускаем строку с "config: |"
+                continue
+              elif [[ "$config_line" =~ ^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*=[[:space:]]* ]]; then
+                # Это строка конфигурации
+                CONFIG="$CONFIG$config_line"$'\n'
+                
+                # Извлекаем hostname и server_name
+                if [[ "$config_line" =~ hostname[[:space:]]*=[[:space:]]*\"([^\"]+)\" ]]; then
+                  HOSTNAME="${BASH_REMATCH[1]}"
+                fi
+                if [[ "$config_line" =~ server_name[[:space:]]*=[[:space:]]*\"([^\"]+)\" ]]; then
+                  SERVER_NAME="${BASH_REMATCH[1]}"
+                fi
+              fi
+            done
+            
+            echo "Processing server: IP=$IP, Hostname=$HOSTNAME, Name=$SERVER_NAME"
+            
+            # Добавляем запятую если не первый элемент для matrix
+            if [ "$FIRST_MATRIX" = true ]; then
+              FIRST_MATRIX=false
             else
               MATRIX="$MATRIX,"
             fi
             
             # Добавляем элемент в matrix
-            MATRIX="$MATRIX{\"host\":\"$IP\",\"config_var\":\"$HOST_VAR\"}"
+            MATRIX="$MATRIX{\"host\":\"$IP\",\"config_var\":\"$IP\"}"
+            
+            # Добавляем запятую если не первый элемент для hosts_json
+            if [ "$FIRST_HOSTS" = true ]; then
+              FIRST_HOSTS=false
+            else
+              HOSTS_JSON="$HOSTS_JSON,"
+            fi
+            
+            # Добавляем элемент в hosts_json с полной информацией
+            HOSTS_JSON="$HOSTS_JSON{\"ip\":\"$IP\",\"hostname\":\"$HOSTNAME\",\"server_name\":\"$SERVER_NAME\"}"
           fi
-        done
+        done <<< "$HOSTS_CONFIG"
         
         MATRIX="$MATRIX]"
+        HOSTS_JSON="$HOSTS_JSON]"
+        
         echo "Generated matrix: $MATRIX"
+        echo "Generated hosts JSON: $HOSTS_JSON"
         
         # Сохраняем в output для использования в matrix
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+        echo "hosts_json=$HOSTS_JSON" >> $GITHUB_OUTPUT
+
+  generate-hosts-html:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Generate deployed-servers.html
+      run: |
+        # Создаем HTML страницу с встроенными данными о хостах
+        HOSTS_JSON='${{ needs.generate-matrix.outputs.hosts-json }}'
+        
+        # Создаем HTML файл
+        cat > static/deployed-servers.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Deployed Servers - Nettest</title>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+            <style>
+                body {
+                    margin: 0;
+                    padding: 20px;
+                    font-family: 'Roboto Mono', monospace;
+                    background-color: #05080f;
+                    color: #00ffff;
+                    line-height: 1.6;
+                }
+                .container { max-width: 1200px; margin: 0 auto; }
+                h1 { text-align: center; color: #00ffff; text-shadow: 0 0 10px #00ffff; margin-bottom: 30px; }
+                .servers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 30px; }
+                .server-card { background: rgba(0, 25, 50, 0.8); border: 1px solid #00ffff; border-radius: 8px; padding: 20px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.3); transition: all 0.3s ease; }
+                .server-card:hover { box-shadow: 0 0 25px rgba(0, 255, 255, 0.5); transform: translateY(-2px); }
+                .server-header { border-bottom: 1px solid #00ffff; padding-bottom: 15px; margin-bottom: 15px; }
+                .server-name { font-size: 18px; font-weight: bold; color: #ffffff; margin-bottom: 5px; }
+                .server-ip { font-size: 14px; color: #00ffff; font-family: monospace; }
+                .server-info { margin-bottom: 10px; }
+                .info-label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+                .info-value { color: #ffffff; font-size: 14px; margin-top: 2px; }
+                .status-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+                .status-online { background-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
+                .status-offline { background-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
+                .loading { text-align: center; color: #00ffff; font-size: 18px; margin-top: 50px; }
+                .error { text-align: center; color: #ff6b6b; font-size: 16px; margin-top: 50px; }
+                .refresh-btn { background: transparent; border: 1px solid #00ffff; color: #00ffff; padding: 10px 20px; font-family: 'Roboto Mono', monospace; cursor: pointer; border-radius: 4px; transition: all 0.3s ease; margin-bottom: 20px; }
+                .refresh-btn:hover { background: #00ffff; color: #05080f; }
+                .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+                .stat-card { background: rgba(0, 25, 50, 0.6); border: 1px solid #00ffff; border-radius: 6px; padding: 15px; text-align: center; }
+                .stat-number { font-size: 24px; font-weight: bold; color: #ffffff; }
+                .stat-label { font-size: 12px; color: #888; text-transform: uppercase; margin-top: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🚀 Deployed Servers</h1>
+                
+                <button class="refresh-btn" onclick="loadServers()">🔄 Refresh Servers</button>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-servers">-</div>
+                        <div class="stat-label">Total Servers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="online-servers">-</div>
+                        <div class="stat-label">Online</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="offline-servers">-</div>
+                        <div class="stat-label">Offline</div>
+                    </div>
+                </div>
+
+                <div id="servers-container">
+                    <div class="loading">Loading servers...</div>
+                </div>
+            </div>
+
+            <script>
+                // Configuration
+                const CONTROL_SERVER_URL = 'https://api.nettest.org';
+                const X_NETTEST_CLIENT = 'nt';
+                
+                // Hosts mapping loaded from workflow
+                const HOSTS_MAPPING = $HOSTS_JSON;
+                
+                let serversData = [];
+                let deployedServers = [];
+
+                async function loadServers() {
+                    const container = document.getElementById('servers-container');
+                    container.innerHTML = '<div class="loading">Loading servers...</div>';
+
+                    try {
+                        // Fetch servers from API
+                        const response = await fetch(`${CONTROL_SERVER_URL}/measurementServer`, {
+                            method: 'GET',
+                            headers: {
+                                'x-nettest-client': X_NETTEST_CLIENT,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        serversData = await response.json();
+                        
+                        // Match deployed servers with API data
+                        deployedServers = matchDeployedServers(serversData);
+                        
+                        // Update stats
+                        updateStats();
+                        
+                        // Render servers
+                        renderServers();
+                        
+                    } catch (error) {
+                        console.error('Error loading servers:', error);
+                        container.innerHTML = `<div class="error">Error loading servers: ${error.message}</div>`;
+                    }
+                }
+
+                function matchDeployedServers(apiServers) {
+                    const matched = [];
+                    
+                    for (const host of HOSTS_MAPPING) {
+                        // Find matching server in API data
+                        const apiServer = apiServers.find(server => 
+                            server.ipAddress === host.ip || 
+                            server.webAddress === host.hostname
+                        );
+                        
+                        if (apiServer) {
+                            matched.push({
+                                ip: host.ip,
+                                hostname: host.hostname,
+                                server_name: host.server_name,
+                                api_data: apiServer
+                            });
+                        } else {
+                            // Server not found in API, but we know it's deployed
+                            matched.push({
+                                ip: host.ip,
+                                hostname: host.hostname,
+                                server_name: host.server_name,
+                                api_data: null
+                            });
+                        }
+                    }
+                    
+                    return matched;
+                }
+
+                function updateStats() {
+                    document.getElementById('total-servers').textContent = deployedServers.length;
+                    document.getElementById('online-servers').textContent = deployedServers.filter(s => s.api_data).length;
+                    document.getElementById('offline-servers').textContent = deployedServers.filter(s => !s.api_data).length;
+                }
+
+                function renderServers() {
+                    const container = document.getElementById('servers-container');
+                    
+                    if (deployedServers.length === 0) {
+                        container.innerHTML = '<div class="error">No deployed servers found</div>';
+                        return;
+                    }
+
+                    const serversHTML = deployedServers.map(server => `
+                        <div class="server-card">
+                            <div class="server-header">
+                                <div class="server-name">${server.server_name}</div>
+                                <div class="server-ip">${server.ip}</div>
+                            </div>
+                            
+                            <div class="server-info">
+                                <div class="info-label">Hostname</div>
+                                <div class="info-value">${server.hostname}</div>
+                            </div>
+                            
+                            <div class="server-info">
+                                <div class="info-label">Status</div>
+                                <div class="info-value">
+                                    <span class="status-indicator ${server.api_data ? 'status-online' : 'status-offline'}"></span>
+                                    ${server.api_data ? 'Online' : 'Offline'}
+                                </div>
+                            </div>
+                            
+                            ${server.api_data ? `
+                                <div class="server-info">
+                                    <div class="info-label">API Name</div>
+                                    <div class="info-value">${server.api_data.name || 'N/A'}</div>
+                                </div>
+                                
+                                <div class="server-info">
+                                    <div class="info-label">Version</div>
+                                    <div class="info-value">${server.api_data.version || 'N/A'}</div>
+                                </div>
+                                
+                                <div class="server-info">
+                                    <div class="info-label">IPv4 Support</div>
+                                    <div class="info-value">${server.api_data.ipV4Support ? '✅ Yes' : '❌ No'}</div>
+                                </div>
+                                
+                                <div class="server-info">
+                                    <div class="info-label">IPv6 Support</div>
+                                    <div class="info-value">${server.api_data.ipV6Support ? '✅ Yes' : '❌ No'}</div>
+                                </div>
+                                
+                                <div class="server-info">
+                                    <div class="info-label">Latest Ping</div>
+                                    <div class="info-value">${server.api_data.pingLatest || 'N/A'}</div>
+                                </div>
+                                
+                                ${server.api_data.location ? `
+                                    <div class="server-info">
+                                        <div class="info-label">Location</div>
+                                        <div class="info-value">
+                                            ${server.api_data.location.country || ''} 
+                                            ${server.api_data.location.city || ''}
+                                            ${server.api_data.location.latitude ? `(${server.api_data.location.latitude}, ${server.api_data.location.longitude})` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            ` : `
+                                <div class="server-info">
+                                    <div class="info-label">Note</div>
+                                    <div class="info-value">Server deployed but not responding to API</div>
+                                </div>
+                            `}
+                        </div>
+                    `).join('');
+
+                    container.innerHTML = serversHTML;
+                }
+
+                // Load servers on page load
+                document.addEventListener('DOMContentLoaded', loadServers);
+            </script>
+        </body>
+        </html>
+        EOF
+        
+        echo "deployed-servers.html generated successfully"
+        
+    - name: Commit and push generated HTML
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add static/deployed-servers.html
+        git commit -m "Update deployed-servers.html with latest hosts" || echo "No changes to commit"
+        git push
 
   deploy:
     needs: generate-matrix
@@ -78,13 +380,45 @@ jobs:
           
           # Создаем конфигурационный файл
           echo "Creating /etc/nettest.conf..."
-          cat > /etc/nettest.conf << 'EOF'
-          ${{ secrets[matrix.config_var] }}
-          cert_path = "/root/specure-cd.crt"
-          key_path = "/root/specure-cd.key"
+          
+          # Получаем полную конфигурацию для этого сервера
+          SERVER_IP="${{ matrix.host }}"
+          
+          # Извлекаем конфигурацию для конкретного сервера из HOSTS_CONFIG
+          HOSTS_CONFIG="${{ secrets.HOSTS_CONFIG }}"
+          
+          # Создаем временный файл с конфигурацией
+          cat > /tmp/server_config.conf << 'EOF'
+          $HOSTS_CONFIG
           EOF
           
+          # Извлекаем конфигурацию для конкретного IP
+          awk -v ip="$SERVER_IP" '
+          BEGIN { in_config = 0; config_found = 0; }
+          /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:/ {
+              if ($1 == ip ":") {
+                  in_config = 1;
+                  config_found = 1;
+                  next;
+              } else {
+                  in_config = 0;
+              }
+          }
+          in_config && /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*=/ {
+              if (!/^[[:space:]]*config:[[:space:]]*\|/) {
+                  gsub(/^[[:space:]]*/, "");
+                  print;
+              }
+          }
+          ' /tmp/server_config.conf > /etc/nettest.conf
+          
+          # Добавляем пути к сертификатам
+          echo "cert_path = \"/root/specure-cd.crt\"" >> /etc/nettest.conf
+          echo "key_path = \"/root/specure-cd.key\"" >> /etc/nettest.conf
+          
           echo "Configuration file created successfully"
+          echo "Content of /etc/nettest.conf:"
+          cat /etc/nettest.conf
           
           # Загружаем TLS сертификаты
           echo "Uploading TLS certificates..."
