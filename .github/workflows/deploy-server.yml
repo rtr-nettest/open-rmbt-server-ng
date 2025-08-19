@@ -66,6 +66,15 @@ jobs:
         echo "Matrix output set: $MATRIX"
         echo "GITHUB_OUTPUT content:"
         cat $GITHUB_OUTPUT
+        
+        # Проверяем, что output действительно записался
+        echo "Verifying output..."
+        if grep -q "matrix=" $GITHUB_OUTPUT; then
+          echo "✅ matrix output found in GITHUB_OUTPUT"
+          grep "matrix=" $GITHUB_OUTPUT
+        else
+          echo "❌ matrix output NOT found in GITHUB_OUTPUT"
+        fi
 
   deploy:
     needs: generate-matrix
