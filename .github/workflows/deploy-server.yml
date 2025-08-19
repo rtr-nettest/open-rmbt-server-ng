@@ -25,11 +25,13 @@ jobs:
         
         # Извлекаем IP адреса из конфигурации
         IP_ADDRESSES=""
-        while IFS= read -r line; do
-            if [[ $line =~ ^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+        while IFS= read -r block; do
+            # Убираем пустые строки и берем первую строку
+            FIRST_LINE=$(echo "$block" | grep -v '^[[:space:]]*$' | head -1)
+            if [[ $FIRST_LINE =~ ^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
                 IP_ADDRESSES="$IP_ADDRESSES ${BASH_REMATCH[1]}"
             fi
-        done <<< "$HOSTS_CONF_ENV"
+        done < <(echo "$HOSTS_CONF_ENV" | awk 'BEGIN{RS="---"} {print $0}')
         IP_ADDRESSES="${IP_ADDRESSES# }"  # убираем первый пробел
         
         
