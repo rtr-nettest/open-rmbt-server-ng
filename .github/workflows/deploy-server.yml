@@ -22,11 +22,7 @@ jobs:
         echo "HOSTS_CONFIG length: ${#HOSTS_CONFIG}"
         echo "First 100 chars: ${HOSTS_CONFIG:0:100}"
         
-        # Создаем JSON массив для matrix
-        MATRIX='['
-        FIRST=true
-        
-        # Извлекаем IP адреса для matrix (ищем строки, начинающиеся с IP)
+        # Извлекаем IP адреса для matrix
         echo "Extracting IP addresses..."
         IP_ADDRESSES=$(echo "$HOSTS_CONFIG" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$" | tr -d ' ')
         echo "Found IP_ADDRESSES: '$IP_ADDRESSES'"
@@ -38,63 +34,25 @@ jobs:
           exit 1
         fi
         
-        for IP in $IP_ADDRESSES; do
-          echo "Processing IP: $IP"
-          
-          # Добавляем запятую если не первый элемент
-          if [ "$FIRST" = true ]; then
-            FIRST=false
-          else
-            MATRIX="$MATRIX,"
-          fi
-          
-          # Добавляем элемент в matrix
-          MATRIX="$MATRIX{\"host\":\"$IP\",\"config_var\":\"$IP\"}"
-        done
-        
-        MATRIX="$MATRIX]"
-        echo "Generated matrix: $MATRIX"
-        
-        # Проверяем, что matrix не пустой
-        if [ "$MATRIX" = "[]" ]; then
-          echo "ERROR: Generated matrix is empty"
-          exit 1
-        fi
+        # Создаем простую строку с IP адресами, разделенными пробелами
+        MATRIX_STRING=$(echo "$IP_ADDRESSES" | tr '\n' ' ')
+        echo "Generated matrix string: '$MATRIX_STRING'"
         
         # Сохраняем в output для использования в matrix
-        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-        echo "Matrix output set: $MATRIX"
+        echo "matrix=$MATRIX_STRING" >> $GITHUB_OUTPUT
+        echo "Matrix output set: $MATRIX_STRING"
         echo "GITHUB_OUTPUT content:"
         cat $GITHUB_OUTPUT
-        
-        # Проверяем, что output действительно записался
-        echo "Verifying output..."
-        if grep -q "matrix=" $GITHUB_OUTPUT; then
-          echo "✅ matrix output found in GITHUB_OUTPUT"
-          grep "matrix=" $GITHUB_OUTPUT
-        else
-          echo "❌ matrix output NOT found in GITHUB_OUTPUT"
-        fi
-        
-        # Дополнительная проверка
-        echo "Final matrix value: $MATRIX"
-        echo "Matrix output line: matrix=$MATRIX"
 
   deploy:
     needs: generate-matrix
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        host: ${{ split(needs.generate-matrix.outputs.matrix, ' ') }}
+      fail-fast: false
+    
     steps:
-    - name: Debug matrix
-      run: |
-        echo "Debugging matrix..."
-        echo "needs.generate-matrix.outputs.matrix: '${{ needs.generate-matrix.outputs.matrix }}'"
-        echo "Matrix content: ${{ needs.generate-matrix.outputs.matrix }}"
-        
-        if [ -z "${{ needs.generate-matrix.outputs.matrix }}" ]; then
-          echo "ERROR: Matrix is empty!"
-          exit 1
-        fi
-        
     - name: Checkout code
       uses: actions/checkout@v3
       
