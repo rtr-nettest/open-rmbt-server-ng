@@ -35,26 +35,6 @@ jobs:
           echo "$HOSTS_CONFIG"
           exit 1
         fi
-        
-        # Создаем JSON массив для matrix
-        MATRIX='['
-        FIRST=true
-        
-        for IP in $IP_ADDRESSES; do
-          echo "Processing IP: $IP"
-          
-          # Добавляем запятую если не первый элемент
-          if [ "$FIRST" = true ]; then
-            FIRST=false
-          else
-            MATRIX="$MATRIX,"
-          fi
-          
-          # Добавляем элемент в matrix
-          MATRIX="$MATRIX{\"host\":\"$IP\"}"
-        done
-        
-        MATRIX="$MATRIX]"
 
         echo "matrix=[{\"host\":\"139.162.150.114\",\"config_var\":\"PROD_MACHINE_FRANKFURT2025_139_162_150_114\"}]" >> $GITHUB_OUTPUT
         
