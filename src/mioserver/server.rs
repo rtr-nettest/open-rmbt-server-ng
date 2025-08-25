@@ -12,8 +12,8 @@ use crate::mioserver::control_server::auto_registration::{deregister_server, reg
 
 #[derive(Debug)]
 pub enum ConnectionType {
-    Tcp(TcpStream),
-    Tls(TcpStream), // Пока что тот же TcpStream, но с флагом TLS
+    Tcp(TcpStream, SocketAddr),
+    Tls(TcpStream, SocketAddr), // Пока что тот же TcpStream, но с флагом TLS
 }
 
 use crate::config::FileConfig;
@@ -40,20 +40,23 @@ pub struct TestState {
     pub write_buffer: [u8; 1024 * 8],
     pub read_bytes: BytesMut,
     pub read_pos: usize,
-    pub total_bytes: u64,
+    pub total_bytes_received: u64,
+    pub total_bytes_sent: u64,
     pub write_pos: usize,
     pub num_chunks: usize,
     pub chunk_size: usize,
     pub processed_chunks: usize,
     pub clock: Option<Instant>,
-    pub time_ns: Option<u128>,
+    pub sent_time_ns: Option<u128>,
+    pub received_time_ns: Option<u128>,
     pub duration: u64,
     pub put_duration: Option<u128>,
     pub chunk_buffer: Vec<u8>,
     pub chunk: Option<BytesMut>,
     pub terminal_chunk: Option<BytesMut>,
-    pub bytes_received: VecDeque<(u64, u64)>
-
+    pub bytes_received: VecDeque<(u64, u64)>,
+    pub client_addr: Option<SocketAddr>,
+    pub sig_key: Option<String>,
 }
 
 #[derive(Clone)]
@@ -66,7 +69,7 @@ pub struct ServerConfig {
     pub user: Option<String>,
     pub daemon: bool,
     pub version: Option<String>,
-    pub secret_key: Option<String>,
+    pub secret_key: String,  
     pub log_level: Option<LevelFilter>,
     pub server_registration: bool,
     pub control_server: String,
@@ -155,7 +158,7 @@ impl MioServer {
                 }
             });
         }
-      
+
         loop {
             // Проверяем сигнал завершения
             if self.shutdown_signal.load(Ordering::Relaxed) {
@@ -169,7 +172,7 @@ impl MioServer {
                     if let Err(e) = stream.set_nodelay(true) {
                         debug!("Failed to set TCP_NODELAY: {}", e);
                     }
-                    self.handle_connection(stream, false)?;
+                    self.handle_connection(stream, false, _addr)?;
                 }
                 Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                     // Продолжаем
@@ -187,7 +190,7 @@ impl MioServer {
                         if let Err(e) = stream.set_nodelay(true) {
                             debug!("Failed to set TCP_NODELAY: {}", e);
                         }
-                        self.handle_connection(stream, true)?;
+                        self.handle_connection(stream, true, _addr)?;
                     }
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                         // Продолжаем
@@ -205,18 +208,18 @@ impl MioServer {
             thread::sleep(std::time::Duration::from_millis(10));
         }
 
-       
+
         Ok(())
     }
 
    pub  async fn shutdown(&mut self) -> io::Result<()> {
         info!("Starting graceful shutdown...");
-        
+
         if self.server_config.server_registration {
             info!("Deregistering server from control server...");
             let _ = deregister_server(&self.server_config).await;
         }
-        
+
         info!("Server shutdown complete");
         Ok(())
     }
@@ -235,11 +238,11 @@ impl MioServer {
         Ok(())
     }
 
-    fn handle_connection(&mut self, stream: TcpStream, is_tls: bool) -> io::Result<()> {
+    fn handle_connection(&mut self, stream: TcpStream, is_tls: bool, client_addr: SocketAddr) -> io::Result<()> {
         let connection = if is_tls {
-            ConnectionType::Tls(stream)
+            ConnectionType::Tls(stream, client_addr)
         } else {
-            ConnectionType::Tcp(stream)
+            ConnectionType::Tcp(stream, client_addr)
         };
 
         // Добавляем соединение в глобальную очередь
