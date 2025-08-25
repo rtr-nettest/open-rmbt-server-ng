@@ -34,7 +34,7 @@ pub fn handle_signed_result(poll: &Poll, state: &mut TestState) -> Result<usize,
 
     let envelope = format!("{}:{}\n", message, signature);
     if state.write_pos == 0 {
-        println!("envelope: {}", envelope);
+        debug!("envelope: {}", envelope);
         state.write_buffer[0..envelope.len()].copy_from_slice(envelope.as_bytes());
     }
 

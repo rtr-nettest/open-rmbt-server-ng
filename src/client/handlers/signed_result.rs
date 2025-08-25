@@ -46,7 +46,7 @@ pub fn handle_signed_result_receive(
             state.write_pos = 0;
             state.stream.reregister(poll, state.token, Interest::WRITABLE)?;
             state.phase = TestPhase::SignedResultSendOk;
-            println!("envelope: {}", state.envelope.as_ref().unwrap());
+            debug!("envelope: {}", state.envelope.as_ref().unwrap());
             return Ok(n);
         }
     }
