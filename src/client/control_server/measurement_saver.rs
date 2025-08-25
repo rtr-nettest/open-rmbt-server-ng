@@ -177,7 +177,7 @@ impl MeasurementSaver {
         // Отправляем POST запрос
         let client = reqwest::Client::new();
         let response = client
-            .post(&format!("{}/measurement/save", "http://127.0.0.1:8080"))
+            .post(&format!("{}/measurement/save", self.client_config.control_server))
             .header("Content-Type", "application/json")
             .header("x-nettest-client", "nt")
             .json(&measurement_data)
