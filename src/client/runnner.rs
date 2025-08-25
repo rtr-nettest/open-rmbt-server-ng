@@ -157,7 +157,7 @@ pub async fn run_threads(
 
             barrier.wait();
 
-            if config.save_results {
+            if config.save_results && config.signed_result {
                 state.run_signed_result().unwrap();
                 barrier.wait();
             }
@@ -197,9 +197,9 @@ pub async fn run_threads(
         .cloned()
         .collect();
 
-    let envelopes: Vec<String> = state_refs
+    let envelopes: Vec<Option<String>> = state_refs
         .iter()
-        .map(|s| s.envelope.clone().unwrap())
+        .map(|s| s.envelope.clone())
         .collect();
 
     if state_refs.len() != config.thread_count {

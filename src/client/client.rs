@@ -43,6 +43,7 @@ pub struct ClientConfig {
     pub x_nettest_client: String,
     pub control_server: String,
     pub save_results: bool,
+    pub signed_result: bool,
     pub client_uuid: Option<String>,
     pub git_hash: Option<String>,
 }

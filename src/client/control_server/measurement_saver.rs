@@ -127,7 +127,7 @@ impl MeasurementSaver {
         ping_median: Option<u64>,
         download_speed_gbps: Option<f64>,
         upload_speed_gbps: Option<f64>,
-        signed_data: Vec<String>,
+        signed_data: Vec<Option<String>>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // Обеспечиваем наличие client_uuid
         let client_uuid = self.ensure_client_uuid()?;
@@ -159,7 +159,7 @@ impl MeasurementSaver {
             "clientVersion": "2.0.0",
             "connectionType": self.connection_type.as_str(),
             "threadsNumber": self.threads_number,
-            "signedData": signed_data,
+            "signedData": if self.client_config.signed_result { Some(signed_data) } else { None },
             "measurementServerIp": self.resolve_server_ip(),
         });
 

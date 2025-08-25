@@ -33,6 +33,7 @@ pub struct FileConfig {
     pub hostname: Option<String>,
     pub registration_token: Option<String>,
     pub client_uuid: Option<String>,
+    pub signed_result: bool,
 }
 
 impl Default for FileConfig {
@@ -60,6 +61,7 @@ impl Default for FileConfig {
             hostname: None,
             registration_token: None,
             client_uuid: None,
+            signed_result: false,
         }
     }
 }

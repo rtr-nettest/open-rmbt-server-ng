@@ -18,6 +18,7 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
         x_nettest_client: default_config.x_nettest_client,
         control_server: default_config.control_server,
         save_results: false,
+        signed_result: default_config.signed_result,
         client_uuid: default_config.client_uuid,
         git_hash: None,
     };
@@ -60,6 +61,9 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
             }
             "-save" => {
                 config.save_results = true;
+            }
+            "-signed" => {
+                config.signed_result = true;
             }
             "-git-hash" => {
                 i += 1;

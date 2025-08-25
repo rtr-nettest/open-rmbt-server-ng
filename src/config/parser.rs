@@ -153,6 +153,9 @@ fn parse_config_content(content: &str) -> FileConfig {
                         config.client_uuid = Some(clean_value.to_string());
                     }
                 }
+                "signed_result" => {
+                    config.signed_result = value.parse().unwrap_or(false);
+                }
                 _ => {
                     println!("Warning: Unknown config key: {}", key);
                 }
