@@ -175,95 +175,14 @@ jobs:
         
         echo "=== END PORT STATUS CHECK ==="
         
-        echo "=== DETAILED NETWORK DIAGNOSTICS ==="
-        
-        # Детальная диагностика порта 5005
-        echo "--- Port 5005 Detailed Analysis ---"
-        $port5005_any = Get-NetTCPConnection -LocalPort 5005 -ErrorAction SilentlyContinue
-        if ($port5005_any) {
-            echo "✅ Port 5005 is listening (any IP)"
-            $port5005_any | ForEach-Object {
-                echo "  IP: $($_.LocalAddress), State: $($_.State), PID: $($_.OwningProcess)"
-            }
-        } else {
-            echo "❌ Port 5005 is not listening on any IP"
-        }
-        
-        # Проверяем конкретные IP адреса для порта 5005
-        echo "--- Port 5005 Specific IPs ---"
-        
-        $port5005_127 = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 5005 -ErrorAction SilentlyContinue
-        if ($port5005_127) {
-            echo "✅ Port 5005 listening on 127.0.0.1"
-        } else {
-            echo "❌ Port 5005 NOT listening on 127.0.0.1"
-        }
-        
-        $port5005_0 = Get-NetTCPConnection -LocalAddress 0.0.0.0 -LocalPort 5005 -ErrorAction SilentlyContinue
-        if ($port5005_0) {
-            echo "✅ Port 5005 listening on 0.0.0.0 (all interfaces)"
-        } else {
-            echo "❌ Port 5005 NOT listening on 0.0.0.0"
-        }
-        
-        $port5005_ipv6 = Get-NetTCPConnection -LocalAddress "::" -LocalPort 5005 -ErrorAction SilentlyContinue
-        if ($port5005_ipv6) {
-            echo "✅ Port 5005 listening on [::] (IPv6)"
-        } else {
-            echo "❌ Port 5005 NOT listening on [::]"
-        }
-        
-        # Детальная диагностика порта 443
-        echo "--- Port 443 Detailed Analysis ---"
-        $port443_any = Get-NetTCPConnection -LocalPort 443 -ErrorAction SilentlyContinue
-        if ($port443_any) {
-            echo "✅ Port 443 is listening (any IP)"
-            $port443_any | ForEach-Object {
-                echo "  IP: $($_.LocalAddress), State: $($_.State), PID: $($_.OwningProcess)"
-            }
-        } else {
-            echo "❌ Port 443 is not listening on any IP"
-        }
-        
-        # Проверяем конкретные IP адреса для порта 443
-        echo "--- Port 443 Specific IPs ---"
-        
-        $port443_127 = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 443 -ErrorAction SilentlyContinue
-        if ($port443_127) {
-            echo "✅ Port 443 listening on 127.0.0.1"
-        } else {
-            echo "❌ Port 443 NOT listening on 127.0.0.1"
-        }
-        
-        $port443_0 = Get-NetTCPConnection -LocalAddress 0.0.0.0 -LocalPort 443 -ErrorAction SilentlyContinue
-        if ($port443_0) {
-            echo "✅ Port 443 listening on 0.0.0.0 (all interfaces)"
-        } else {
-            echo "❌ Port 443 NOT listening on 0.0.0.0"
-        }
-        
-        $port443_ipv6 = Get-NetTCPConnection -LocalAddress "::" -LocalPort 443 -ErrorAction SilentlyContinue
-        if ($port443_ipv6) {
-            echo "✅ Port 443 listening on [::] (IPv6)"
-        } else {
-            echo "❌ Port 443 NOT listening on [::]"
-        }
-        
-        # Дополнительная диагностика сети
-        echo "--- All Active TCP Connections ---"
-        echo "Listening ports:"
-        Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Select-Object LocalAddress, LocalPort, State | Sort-Object LocalPort | Format-Table -AutoSize
-        
-        echo "=== END NETWORK DIAGNOSTICS ==="
-        
     - name: Run nettest client TCP test
       run: |
         Set-Location test-run
         
         echo "Running nettest client test with TCP and -save..."
-        echo "Client command: .\nettest.exe -c 127.0.0.1 -save -git-hash ${{ github.sha }} -log trace"
+        echo "Client command: .\nettest.exe -c 0.0.0.0 -save -git-hash ${{ github.sha }} -log trace"
         
-        $process = Start-Process -FilePath ".\nettest.exe" -ArgumentList "-c", "127.0.0.1", "-save", "-git-hash", "${{ github.sha }}", "-log", "trace" -Wait -PassThru -NoNewWindow
+        $process = Start-Process -FilePath ".\nettest.exe" -ArgumentList "-c", "0.0.0.0", "-save", "-git-hash", "${{ github.sha }}", "-log", "trace" -Wait -PassThru -NoNewWindow
         
         echo "Client test completed"
         echo "Client exit code: $($process.ExitCode)"
@@ -280,9 +199,9 @@ jobs:
         Set-Location test-run
         
         echo "Running nettest client test with TLS and -save..."
-        echo "Client command: .\nettest.exe -c 127.0.0.1 -save -tls -git-hash ${{ github.sha }} -log trace"
+        echo "Client command: .\nettest.exe -c 0.0.0.0 -save -tls -git-hash ${{ github.sha }} -log trace"
         
-        $process = Start-Process -FilePath ".\nettest.exe" -ArgumentList "-c", "127.0.0.1", "-save", "-tls", "-git-hash", "${{ github.sha }}", "-log", "trace" -Wait -PassThru -NoNewWindow
+        $process = Start-Process -FilePath ".\nettest.exe" -ArgumentList "-c", "0.0.0.0", "-save", "-tls", "-git-hash", "${{ github.sha }}", "-log", "trace" -Wait -PassThru -NoNewWindow
         
         echo "Client test completed"
         echo "Client exit code: $($process.ExitCode)"
@@ -299,9 +218,9 @@ jobs:
         Set-Location test-run
         
         echo "Running nettest client test with WS and -save..."
-        echo "Client command: .\nettest.exe -c 127.0.0.1 -save -ws -git-hash ${{ github.sha }} -log trace"
+        echo "Client command: .\nettest.exe -c 0.0.0.0 -save -ws -git-hash ${{ github.sha }} -log trace"
         
-        $process = Start-Process -FilePath ".\nettest.exe" -ArgumentList "-c", "127.0.0.1", "-save", "-ws", "-git-hash", "${{ github.sha }}", "-log", "trace" -Wait -PassThru -NoNewWindow
+        $process = Start-Process -FilePath ".\nettest.exe" -ArgumentList "-c", "0.0.0.0", "-save", "-ws", "-git-hash", "${{ github.sha }}", "-log", "trace" -Wait -PassThru -NoNewWindow
         
         echo "Client test completed"
         echo "Client exit code: $($process.ExitCode)"
@@ -318,9 +237,9 @@ jobs:
         Set-Location test-run
         
         echo "Running nettest client test with WSS and -save..."
-        echo "Client command: .\nettest.exe -c 127.0.0.1 -save -tls -ws -git-hash ${{ github.sha }} -log trace"
+        echo "Client command: .\nettest.exe -c 0.0.0.0 -save -tls -ws -git-hash ${{ github.sha }} -log trace"
         
-        $process = Start-Process -FilePath ".\nettest.exe" -ArgumentList "-c", "127.0.0.1", "-save", "-tls", "-ws", "-git-hash", "${{ github.sha }}", "-log", "trace" -Wait -PassThru -NoNewWindow
+        $process = Start-Process -FilePath ".\nettest.exe" -ArgumentList "-c", "0.0.0.0", "-save", "-tls", "-ws", "-git-hash", "${{ github.sha }}", "-log", "trace" -Wait -PassThru -NoNewWindow
         
         echo "Client test completed"
         echo "Client exit code: $($process.ExitCode)"
