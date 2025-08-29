@@ -1,4 +1,5 @@
 use anyhow::{Ok, Result};
+use log::{debug, info};
 use mio::{net::TcpStream, Interest, Poll, Token};
 use std::io::{self, Read, Write};
 use std::net::SocketAddr;
@@ -30,8 +31,14 @@ pub enum Stream {
 impl Stream {
     pub fn new_tcp(addr: SocketAddr) -> Result<Self> {
         let stream = TcpStream::connect(addr)?;
-        stream.set_nodelay(true)?;
-        Ok(Self::Tcp(stream))
+        if let Err(e) = stream.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = stream.set_nodelay(true) {
+                info!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
+        let std = Self::Tcp(stream);
+        Ok(std)
     }
 
     pub fn return_type(&self) -> &str {

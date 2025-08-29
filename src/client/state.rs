@@ -101,7 +101,6 @@ impl TestState {
         let mut poll = Poll::new()?;
         let events = Events::with_capacity(2048);
         let token = Token(tok);
-
         let mut stream = if use_tls && use_websocket {
             debug!("Creating WebSocket TLS stream");
             let stream = Stream::new_websocket_tls(addr)?;

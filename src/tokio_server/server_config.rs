@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs;
 use std::io::BufReader;
-use std::net::{IpAddr, Ipv6Addr, SocketAddr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::sync::Arc;
 use tokio_rustls::rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use tokio_rustls::rustls::ServerConfig;
@@ -308,9 +308,9 @@ pub fn parse_listen_address(addr: &str) -> Result<SocketAddr, Box<dyn Error + Se
     }
 
     // Try port only: 8080
-    if let Ok(port) = addr.parse::<u16>() {
-        return Ok(SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), port));
-    }
+if let Ok(port) = addr.parse::<u16>() {
+    return Ok(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), port));
+}
 
     Err(format!("Invalid listen address format: {}", addr).into())
 }

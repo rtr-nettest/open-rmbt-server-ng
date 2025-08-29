@@ -299,11 +299,14 @@ impl Worker {
                 return Err(io::Error::new(io::ErrorKind::TimedOut, "Handshake timeout"));
             }
 
+            stream.reregister(&self.poll, token, Interest::WRITABLE | Interest::READABLE)?;
+
             // Используем таймаут для poll
             let poll_timeout = timeout - start_time.elapsed();
             self.poll.poll(&mut self.events, Some(poll_timeout))?;
             for event in self.events.iter() {
                 if event.is_readable() {
+                    debug!("Worker {}: event is readable", self.id);
                     match stream.read(&mut buffer) {
                         Ok(n) => {
                             result.extend_from_slice(&buffer[..n]);

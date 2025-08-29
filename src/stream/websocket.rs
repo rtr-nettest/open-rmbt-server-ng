@@ -5,6 +5,7 @@ use mio::{net::TcpStream, Interest, Poll, Token};
 use sha1::{Digest, Sha1};
 use std::io::{self, Read, Write};
 use std::net::SocketAddr;
+use std::time::Duration;
 use tungstenite::protocol::WebSocketConfig;
 use tungstenite::{protocol::WebSocket, Message};
 
@@ -111,11 +112,10 @@ impl WebSocketClient {
         let mut response = Vec::new();
         let mut buffer = [0u8; 1024];
 
+        let mut connection_ready = false;
 
         loop {
-            poll.poll(&mut events, None)?;
-            let mut connection_ready = false;
-
+            poll.poll(&mut events, Some(Duration::from_millis(100)))?;
 
             for event in events.iter() {
                 if event.is_readable() {
