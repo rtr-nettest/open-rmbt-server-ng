@@ -6,21 +6,11 @@ on:
 
   workflow_dispatch:
     inputs:
-      release_version:
-        description: 'Release version to deploy (e.g., v2.0.0, latest)'
+      version:
+        description: 'Version to deploy (e.g., v2.0.0, latest)'
         required: true
-        type: choice
-        default: 'latest'
-        options:
-          - 'latest'
-          - 'v1.0.0'
-          - 'v2.0.0'
-          - 'v3.0.0'
-      custom_version:
-        description: 'Custom version (if not in list above)'
-        required: false
         type: string
-        default: ''
+        default: 'latest'
 
 jobs:
   generate-matrix:
@@ -108,14 +98,9 @@ jobs:
           # set -e
           echo "Deploying to server: ${{ matrix.host }}"
           
-          # Определяем версию для деплоя
-          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
-            DEPLOY_VERSION="${{ github.event.inputs.custom_version }}"
-            echo "Using custom version: $DEPLOY_VERSION"
-          else
-            DEPLOY_VERSION="${{ github.event.inputs.release_version }}"
-            echo "Using selected version: $DEPLOY_VERSION"
-          fi
+          # Используем введенную версию
+          DEPLOY_VERSION="${{ github.event.inputs.version }}"
+          echo "Deploying version: $DEPLOY_VERSION"
           
           echo "Configuration loaded successfully"
           
