@@ -5,6 +5,22 @@ on:
     branches: [ parser_update ]
 
   workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version to deploy (e.g., v2.0.0, latest)'
+        required: true
+        type: choice
+        default: 'latest'
+        options:
+          - 'latest'
+          - 'v1.0.0'
+          - 'v2.0.0'
+          - 'v3.0.0'
+      custom_version:
+        description: 'Custom version (if not in list above)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   generate-matrix:
@@ -91,6 +107,16 @@ jobs:
         script: |
           # set -e
           echo "Deploying to server: ${{ matrix.host }}"
+          
+          # Определяем версию для деплоя
+          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            DEPLOY_VERSION="${{ github.event.inputs.custom_version }}"
+            echo "Using custom version: $DEPLOY_VERSION"
+          else
+            DEPLOY_VERSION="${{ github.event.inputs.release_version }}"
+            echo "Using selected version: $DEPLOY_VERSION"
+          fi
+          
           echo "Configuration loaded successfully"
           
           # Создаем конфигурационный файл
@@ -159,16 +185,26 @@ jobs:
             echo "Please upgrade to Debian 11 or higher."
             exit 1
           elif [ "$DEBIAN_VERSION" -eq 11 ]; then
-            NETTEST_URL="https://github.com/specure/nettest/releases/download/latest/nettest-debian-11-x86_64.tar.gz"
+            NETTEST_URL="https://github.com/specure/nettest/releases/download/$DEPLOY_VERSION/nettest-debian-11-x86_64.tar.gz"
           elif [ "$DEBIAN_VERSION" -ge 12 ]; then
             # Для версий 12 и выше используем Debian 12
-            NETTEST_URL="https://github.com/specure/nettest/releases/download/latest/nettest-debian-12-x86_64.tar.gz"
+            NETTEST_URL="https://github.com/specure/nettest/releases/download/$DEPLOY_VERSION/nettest-debian-12-x86_64.tar.gz"
           else
             echo "ERROR: Unable to determine Debian version or unsupported version: $DEBIAN_VERSION"
             exit 1
           fi
           
           echo "Using URL: $NETTEST_URL"
+          
+          # Проверяем доступность релиза
+          echo "Checking if release $DEPLOY_VERSION is available..."
+          if ! curl -s --head "$NETTEST_URL" | head -n 1 | grep -q "200 OK"; then
+            echo "ERROR: Release $DEPLOY_VERSION is not available at $NETTEST_URL"
+            echo "Please check if the release exists and try again"
+            exit 1
+          fi
+          echo "Release $DEPLOY_VERSION is available"
+          
           NEW_BUILD_DIR="/tmp/nettest-new"
           OLD_BUILD_DIR="/tmp/nettest-old"
           CURRENT_BUILD_DIR="/opt/nettest"

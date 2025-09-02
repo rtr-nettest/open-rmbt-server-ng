@@ -1,0 +1,84 @@
+name: Update Release List
+
+on:
+  release:
+    types: [published, deleted]
+  workflow_dispatch:
+
+jobs:
+  update-release-list:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Get all releases
+      id: get-releases
+      run: |
+        # Получаем список всех релизов
+        echo "Fetching releases from GitHub API..."
+        RELEASES=$(gh api repos/${{ github.repository }}/releases --jq '.[].tag_name' | head -10)
+        
+        echo "Found releases:"
+        echo "$RELEASES"
+        
+        # Создаем список для вывода
+        echo "releases<<EOF" >> $GITHUB_OUTPUT
+        echo "$RELEASES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Update deploy workflow
+      run: |
+        # Читаем список релизов
+        RELEASES="${{ steps.get-releases.outputs.releases }}"
+        
+        echo "Updating deploy workflow with releases:"
+        echo "$RELEASES"
+        
+        # Создаем временный файл с обновленными опциями
+        cat > update_deploy.py << 'EOF'
+import re
+
+# Читаем текущий workflow файл
+with open('.github/workflows/deploy-server.yml', 'r') as f:
+    content = f.read()
+
+# Создаем строку с опциями
+options_lines = ['          - \'latest\'']
+for release in """$RELEASES""".strip().split('\n'):
+    if release.strip():
+        options_lines.append(f"          - '{release.strip()}'")
+
+options_text = '\n'.join(options_lines)
+
+# Заменяем секцию options в workflow файле
+pattern = r'(\s+options:\s*\n)(\s+- \'[^\']+\'\s*\n)*'
+replacement = f'\\1{options_text}\n'
+
+new_content = re.sub(pattern, replacement, content)
+
+# Записываем обновленный файл
+with open('.github/workflows/deploy-server.yml', 'w') as f:
+    f.write(new_content)
+
+print("Updated deploy-server.yml with latest release options")
+EOF
+        
+        python3 update_deploy.py
+        
+    - name: Commit changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        if git diff --quiet; then
+          echo "No changes to commit"
+        else
+          git add .github/workflows/deploy-server.yml
+          git commit -m "Update release options in deploy workflow"
+          git push
+          echo "Updated deploy workflow with latest releases"
+        fi

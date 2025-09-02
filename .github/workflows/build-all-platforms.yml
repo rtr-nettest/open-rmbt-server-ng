@@ -1,10 +1,13 @@
 name: Build All Platforms
 
 on:
-  push:
-    branches: [ main, versions ]
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 2.0.0)'
+        required: true
+        type: string
+        default: '1.0.0'
 
 jobs:
   # Linux x86_64 (Ubuntu 24.04)
@@ -650,11 +653,59 @@ jobs:
           rm nettest
         fi
         
-    - name: Create latest release
+    - name: Create versioned release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: latest
-        name: Latest
+        tag_name: v${{ github.event.inputs.version }}
+        name: Release v${{ github.event.inputs.version }}
+        body: |
+          ## Release v${{ github.event.inputs.version }}
+          
+          ### Downloads
+          
+          #### Linux
+          - **Ubuntu 24.04 x86_64**: [nettest-linux-x86_64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-linux-x86_64.tar.gz)
+          - **Ubuntu 24.04 ARM64**: [nettest-linux-aarch64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-linux-aarch64.tar.gz)
+          - **Ubuntu 22.04 x86_64**: [nettest-ubuntu-22-x86_64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-ubuntu-22-x86_64.tar.gz)
+          - **Ubuntu 22.04 ARM64**: [nettest-ubuntu-22-aarch64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-ubuntu-22-aarch64.tar.gz)
+          
+          #### Debian
+          - **Debian 12 x86_64**: [nettest-debian-12-x86_64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-debian-12-x86_64.tar.gz)
+          - **Debian 12 ARM64**: [nettest-debian-12-aarch64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-debian-12-aarch64.tar.gz)
+          - **Debian 11 x86_64**: [nettest-debian-11-x86_64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-debian-11-x86_64.tar.gz)
+          - **Debian 11 ARM64**: [nettest-debian-11-aarch64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-debian-11-aarch64.tar.gz)
+          
+          #### macOS
+          - **macOS Apple Silicon**: [nettest-macos-aarch64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-macos-aarch64.tar.gz)
+          - **macOS Intel**: [nettest-macos-x86_64.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-macos-x86_64.tar.gz)
+          
+          #### Windows
+          - **Windows x86_64**: [nettest-windows-x86_64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-windows-x86_64.zip)
+          - **Windows ARM64**: [nettest-windows-aarch64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-windows-aarch64.zip)
+          
+          ### Installation
+          
+          #### Linux/macOS
+          ```bash
+          # Download and extract
+          wget https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-<distribution>-<arch>.tar.gz
+          tar -xzf nettest-<distribution>-<arch>.tar.gz
+          
+          # Run
+          ./nettest -s  # Server
+          ./nettest -c <address>  # Client
+          ```
+          
+          #### Windows
+          ```powershell
+          # Download and extract
+          Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/nettest-windows-x86_64.zip" -OutFile "nettest-windows-x86_64.zip"
+          Expand-Archive -Path "nettest-windows-x86_64.zip" -DestinationPath "."
+          
+          # Run
+          .\nettest.exe -s  # Server
+          .\nettest.exe -c <address>  # Client
+          ```
         files: |
           nettest-linux-x86_64.tar.gz
           nettest-linux-aarch64.tar.gz
