@@ -183,12 +183,39 @@ jobs:
           
           # Проверяем доступность релиза
           echo "Checking if release $DEPLOY_VERSION is available..."
-          if ! curl -s --head "$NETTEST_URL" | head -n 1 | grep -q "200 OK"; then
-            echo "ERROR: Release $DEPLOY_VERSION is not available at $NETTEST_URL"
-            echo "Please check if the release exists and try again"
-            exit 1
+          echo "Testing URL: $NETTEST_URL"
+          
+          # Сначала проверяем через GitHub API
+          echo "Checking release via GitHub API..."
+          API_RESPONSE=$(curl -s "https://api.github.com/repos/specure/nettest/releases/tags/$DEPLOY_VERSION")
+          if echo "$API_RESPONSE" | grep -q '"message": "Not Found"'; then
+            echo "❌ Release $DEPLOY_VERSION not found via GitHub API"
+          else
+            echo "✅ Release $DEPLOY_VERSION found via GitHub API"
           fi
-          echo "Release $DEPLOY_VERSION is available"
+          
+          # Затем проверяем прямой доступ к файлу
+          echo "Checking direct file access..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$NETTEST_URL")
+          echo "HTTP response code (no redirect): $HTTP_CODE"
+          
+          # Проверяем с редиректами
+          HTTP_CODE_REDIRECT=$(curl -s -o /dev/null -w "%{http_code}" -L "$NETTEST_URL")
+          echo "HTTP response code (with redirect): $HTTP_CODE_REDIRECT"
+          
+          # Используем код с редиректами для финальной проверки
+          if [ "$HTTP_CODE_REDIRECT" -ge 200 ] && [ "$HTTP_CODE_REDIRECT" -lt 400 ]; then
+            echo "✅ Release $DEPLOY_VERSION is available (HTTP $HTTP_CODE_REDIRECT)"
+          else
+            echo "⚠️  WARNING: Release $DEPLOY_VERSION may not be available at $NETTEST_URL"
+            echo "HTTP response codes: $HTTP_CODE (no redirect), $HTTP_CODE_REDIRECT (with redirect)"
+            echo "Continuing with deployment anyway..."
+            
+            # Дополнительная диагностика
+            echo "Trying to get more details..."
+            curl -v "$NETTEST_URL" 2>&1 | head -20
+            echo "Proceeding with download attempt..."
+          fi
           
           NEW_BUILD_DIR="/tmp/nettest-new"
           OLD_BUILD_DIR="/tmp/nettest-old"
@@ -199,19 +226,47 @@ jobs:
           cd $NEW_BUILD_DIR
           
           echo "Downloading build for Debian $DEBIAN_VERSION..."
-          wget -q --timeout=30 --tries=3 "$NETTEST_URL" -O nettest.tar.gz
+          echo "Download URL: $NETTEST_URL"
           
-          if [ $? -eq 0 ] && [ -f nettest.tar.gz ]; then
+          # Пробуем скачать с подробным выводом
+          wget --timeout=30 --tries=3 "$NETTEST_URL" -O nettest.tar.gz
+          DOWNLOAD_EXIT_CODE=$?
+          
+          if [ $DOWNLOAD_EXIT_CODE -eq 0 ] && [ -f nettest.tar.gz ]; then
             FILE_SIZE=$(stat -c%s nettest.tar.gz 2>/dev/null || echo 0)
+            echo "Downloaded file size: $FILE_SIZE bytes"
+            
             if [ $FILE_SIZE -gt 1048576 ]; then
-              echo "Download successful ($(($FILE_SIZE / 1024 / 1024))MB)"
+              echo "✅ Download successful ($(($FILE_SIZE / 1024 / 1024))MB)"
             else
-              echo "Download failed - file too small"
+              echo "❌ Download failed - file too small ($FILE_SIZE bytes)"
+              echo "File contents:"
+              head -c 200 nettest.tar.gz
               exit 1
             fi
           else
-            echo "Download failed"
-            exit 1
+            echo "❌ Download failed with exit code: $DOWNLOAD_EXIT_CODE"
+            echo "URL: $NETTEST_URL"
+            echo "Trying alternative download method..."
+            
+            # Пробуем curl как альтернативу
+            curl -L --connect-timeout 30 --max-time 300 "$NETTEST_URL" -o nettest.tar.gz
+            CURL_EXIT_CODE=$?
+            
+            if [ $CURL_EXIT_CODE -eq 0 ] && [ -f nettest.tar.gz ]; then
+              FILE_SIZE=$(stat -c%s nettest.tar.gz 2>/dev/null || echo 0)
+              if [ $FILE_SIZE -gt 1048576 ]; then
+                echo "✅ Download successful via curl ($(($FILE_SIZE / 1024 / 1024))MB)"
+              else
+                echo "❌ Download failed - file too small ($FILE_SIZE bytes)"
+                exit 1
+              fi
+            else
+              echo "❌ Both wget and curl failed"
+              echo "wget exit code: $DOWNLOAD_EXIT_CODE"
+              echo "curl exit code: $CURL_EXIT_CODE"
+              exit 1
+            fi
           fi
           
           echo "Extracting build..."
