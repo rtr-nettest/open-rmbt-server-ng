@@ -38,36 +38,8 @@ jobs:
         echo "Updating deploy workflow with releases:"
         echo "$RELEASES"
         
-        # Создаем временный файл с обновленными опциями
-        cat > update_deploy.py << 'EOF'
-import re
-
-# Читаем текущий workflow файл
-with open('.github/workflows/deploy-server.yml', 'r') as f:
-    content = f.read()
-
-# Создаем строку с опциями
-options_lines = ['          - \'latest\'']
-for release in """$RELEASES""".strip().split('\n'):
-    if release.strip():
-        options_lines.append(f"          - '{release.strip()}'")
-
-options_text = '\n'.join(options_lines)
-
-# Заменяем секцию options в workflow файле
-pattern = r'(\s+options:\s*\n)(\s+- \'[^\']+\'\s*\n)*'
-replacement = f'\\1{options_text}\n'
-
-new_content = re.sub(pattern, replacement, content)
-
-# Записываем обновленный файл
-with open('.github/workflows/deploy-server.yml', 'w') as f:
-    f.write(new_content)
-
-print("Updated deploy-server.yml with latest release options")
-EOF
-        
-        python3 update_deploy.py
+        # Используем Python скрипт для обновления
+        python3 scripts/update_deploy_options.py "$RELEASES"
         
     - name: Commit changes
       run: |
