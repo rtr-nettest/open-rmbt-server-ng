@@ -653,8 +653,8 @@ jobs:
     - name: Create latest release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: latest-all-platforms
-        name: All Platforms Latest Release
+        tag_name: latest
+        name: Latest
         files: |
           nettest-linux-x86_64.tar.gz
           nettest-linux-aarch64.tar.gz

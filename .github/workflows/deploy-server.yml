@@ -159,10 +159,10 @@ jobs:
             echo "Please upgrade to Debian 11 or higher."
             exit 1
           elif [ "$DEBIAN_VERSION" -eq 11 ]; then
-            NETTEST_URL="https://github.com/specure/nettest/releases/download/latest-debian-11/nettest-debian-11-x86_64.tar.gz"
+            NETTEST_URL="https://github.com/specure/nettest/releases/download/latest/nettest-debian-11-x86_64.tar.gz"
           elif [ "$DEBIAN_VERSION" -ge 12 ]; then
             # Для версий 12 и выше используем Debian 12
-            NETTEST_URL="https://github.com/specure/nettest/releases/download/latest-debian-12/nettest-debian-12-x86_64.tar.gz"
+            NETTEST_URL="https://github.com/specure/nettest/releases/download/latest/nettest-debian-12-x86_64.tar.gz"
           else
             echo "ERROR: Unable to determine Debian version or unsupported version: $DEBIAN_VERSION"
             exit 1
