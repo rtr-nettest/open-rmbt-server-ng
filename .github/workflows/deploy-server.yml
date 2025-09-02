@@ -5,6 +5,12 @@ on:
     branches: [ parser_update ]
 
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v2.0.0, latest)'
+        required: true
+        type: string
+        default: 'latest'
 
 jobs:
   generate-matrix:
@@ -91,6 +97,11 @@ jobs:
         script: |
           # set -e
           echo "Deploying to server: ${{ matrix.host }}"
+          
+          # Используем введенную версию
+          DEPLOY_VERSION="${{ github.event.inputs.version }}"
+          echo "Deploying version: $DEPLOY_VERSION"
+          
           echo "Configuration loaded successfully"
           
           # Создаем конфигурационный файл
@@ -159,16 +170,26 @@ jobs:
             echo "Please upgrade to Debian 11 or higher."
             exit 1
           elif [ "$DEBIAN_VERSION" -eq 11 ]; then
-            NETTEST_URL="https://github.com/specure/nettest/releases/download/latest-debian-11/nettest-debian-11-x86_64.tar.gz"
+            NETTEST_URL="https://github.com/specure/nettest/releases/download/$DEPLOY_VERSION/nettest-debian-11-x86_64.tar.gz"
           elif [ "$DEBIAN_VERSION" -ge 12 ]; then
             # Для версий 12 и выше используем Debian 12
-            NETTEST_URL="https://github.com/specure/nettest/releases/download/latest-debian-12/nettest-debian-12-x86_64.tar.gz"
+            NETTEST_URL="https://github.com/specure/nettest/releases/download/$DEPLOY_VERSION/nettest-debian-12-x86_64.tar.gz"
           else
             echo "ERROR: Unable to determine Debian version or unsupported version: $DEBIAN_VERSION"
             exit 1
           fi
           
           echo "Using URL: $NETTEST_URL"
+          
+          # Проверяем доступность релиза
+          echo "Checking if release $DEPLOY_VERSION is available..."
+          if ! curl -s --head "$NETTEST_URL" | head -n 1 | grep -q "200 OK"; then
+            echo "ERROR: Release $DEPLOY_VERSION is not available at $NETTEST_URL"
+            echo "Please check if the release exists and try again"
+            exit 1
+          fi
+          echo "Release $DEPLOY_VERSION is available"
+          
           NEW_BUILD_DIR="/tmp/nettest-new"
           OLD_BUILD_DIR="/tmp/nettest-old"
           CURRENT_BUILD_DIR="/opt/nettest"
