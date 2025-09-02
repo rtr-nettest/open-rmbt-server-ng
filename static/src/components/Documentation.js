@@ -65,24 +65,40 @@ const Documentation = ({ isOpen, onClose }) => {
               
               <h5>Debian</h5>
               <ul>
-                <li><strong>Debian 12 (Bookworm) x86_64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest-debian-12/nettest-debian-12-x86_64.tar.gz">nettest-debian-12-x86_64.tar.gz</a></li>
-                <li><strong>Debian 12 (Bookworm) ARM64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest-debian-12/nettest-debian-12-aarch64.tar.gz">nettest-debian-12-aarch64.tar.gz</a></li>
-                <li><strong>Debian 11 (Bullseye) x86_64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest-debian-11/nettest-debian-11-x86_64.tar.gz">nettest-debian-11-x86_64.tar.gz</a></li>
-                <li><strong>Debian 11 (Bullseye) ARM64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest-debian-11/nettest-debian-11-aarch64.tar.gz">nettest-debian-11-aarch64.tar.gz</a></li>
+                <li><strong>Debian 12 (Bookworm) x86_64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest/nettest-debian-12-x86_64.tar.gz">nettest-debian-12-x86_64.tar.gz</a></li>
+                <li><strong>Debian 12 (Bookworm) ARM64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest/nettest-debian-12-aarch64.tar.gz">nettest-debian-12-aarch64.tar.gz</a></li>
+                <li><strong>Debian 11 (Bullseye) x86_64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest/nettest-debian-11-x86_64.tar.gz">nettest-debian-11-x86_64.tar.gz</a></li>
+                <li><strong>Debian 11 (Bullseye) ARM64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest/nettest-debian-11-aarch64.tar.gz">nettest-debian-11-aarch64.tar.gz</a></li>
               </ul>
               
               <h5>macOS</h5>
               <ul>
-                <li><strong>macOS Apple Silicon</strong>: <a href="https://github.com/specure/nettest/releases/download/latest-macos/nettest-macos-aarch64.tar.gz">nettest-macos-aarch64.tar.gz</a></li>
-                <li><strong>macOS Intel</strong>: <a href="https://github.com/specure/nettest/releases/download/latest-macos/nettest-macos-x86_64.tar.gz">nettest-macos-x86_64.tar.gz</a></li>
+                <li><strong>macOS Apple Silicon</strong>: <a href="https://github.com/specure/nettest/releases/download/latest/nettest-macos-aarch64.tar.gz">nettest-macos-aarch64.tar.gz</a></li>
+                <li><strong>macOS Intel</strong>: <a href="https://github.com/specure/nettest/releases/download/latest/nettest-macos-x86_64.tar.gz">nettest-macos-x86_64.tar.gz</a></li>
+              </ul>
+              
+              <h5>Windows</h5>
+              <ul>
+                <li><strong>Windows x86_64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest/nettest-windows-x86_64.zip">nettest-windows-x86_64.zip</a></li>
+                <li><strong>Windows ARM64</strong>: <a href="https://github.com/specure/nettest/releases/download/latest/nettest-windows-aarch64.zip">nettest-windows-aarch64.zip</a></li>
               </ul>
               
               <div className="note">
                 <strong>Note:</strong>
                 <ol>
                   <li>Download the appropriate archive for your architecture and distribution</li>
-                  <li>Extract: <code>tar -xzf nettest-&lt;distribution&gt;-&lt;arch&gt;.tar.gz</code></li>
-                  <li>Run: <code>./nettest -s</code> (server) or <code>./nettest -c &lt;address&gt;</code> (client)</li>
+                  <li>Extract: 
+                    <ul>
+                      <li>Linux/macOS: <code>tar -xzf nettest-&lt;distribution&gt;-&lt;arch&gt;.tar.gz</code></li>
+                      <li>Windows: Extract the ZIP file</li>
+                    </ul>
+                  </li>
+                  <li>Run: 
+                    <ul>
+                      <li>Linux/macOS: <code>./nettest -s</code> (server) or <code>./nettest -c &lt;address&gt;</code> (client)</li>
+                      <li>Windows: <code>nettest.exe -s</code> (server) or <code>nettest.exe -c &lt;address&gt;</code> (client)</li>
+                    </ul>
+                  </li>
                 </ol>
               </div>
               
@@ -100,6 +116,7 @@ cargo build --release</code></pre>
                 <li><strong>Ubuntu builds</strong>: Latest and LTS versions with native compilation</li>
                 <li><strong>Debian builds</strong>: Multiple versions (11, 12) for maximum compatibility</li>
                 <li><strong>macOS builds</strong>: Apple Silicon and Intel architectures</li>
+                <li><strong>Windows builds</strong>: x86_64 and ARM64 architectures</li>
               </ul>
               
               <h4>Run Server</h4>

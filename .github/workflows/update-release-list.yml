@@ -1,0 +1,56 @@
+name: Update Release List
+
+on:
+  release:
+    types: [published, deleted]
+  workflow_dispatch:
+
+jobs:
+  update-release-list:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Get all releases
+      id: get-releases
+      run: |
+        # Получаем список всех релизов
+        echo "Fetching releases from GitHub API..."
+        RELEASES=$(gh api repos/${{ github.repository }}/releases --jq '.[].tag_name' | head -10)
+        
+        echo "Found releases:"
+        echo "$RELEASES"
+        
+        # Создаем список для вывода
+        echo "releases<<EOF" >> $GITHUB_OUTPUT
+        echo "$RELEASES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Update deploy workflow
+      run: |
+        # Читаем список релизов
+        RELEASES="${{ steps.get-releases.outputs.releases }}"
+        
+        echo "Updating deploy workflow with releases:"
+        echo "$RELEASES"
+        
+        # Используем Python скрипт для обновления
+        python3 scripts/update_deploy_options.py "$RELEASES"
+        
+    - name: Commit changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        if git diff --quiet; then
+          echo "No changes to commit"
+        else
+          git add .github/workflows/deploy-server.yml
+          git commit -m "Update release options in deploy workflow"
+          git push
+          echo "Updated deploy workflow with latest releases"
+        fi
