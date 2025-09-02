@@ -461,7 +461,7 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           target
-        key: ${{ runner.os }}-cargo-x86_64-unknown-linux-gnu-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-ubuntu-22-x86_64-${{ hashFiles('**/Cargo.lock') }}
         
     - name: Build for Ubuntu 22.04 x86_64
       env:
@@ -470,13 +470,13 @@ jobs:
         RUSTFLAGS: "-C link-arg=-Wl,-z,relro,-z,now"
         LIBCLANG_PATH: /usr/lib/llvm-14/lib/libclang.so
       run: |
-        cargo build --release --target x86_64-unknown-linux-gnu
+        cargo build --release
         
     - name: Upload binary for release
       uses: actions/upload-artifact@v4
       with:
         name: nettest-ubuntu-22-x86_64-binary
-        path: target/x86_64-unknown-linux-gnu/release/nettest
+        path: target/release/nettest
 
   # Ubuntu 22.04 aarch64
   build-ubuntu-22-aarch64:
