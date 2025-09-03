@@ -558,6 +558,9 @@ tls_port = 443
                 
                 <h3>Linux/macOS</h3>
                 <div class="code-block">./nettest -s -c /path/to/server.crt -k /path/to/server.key </div>
+
+                <h3>Windows</h3>
+                <div class="code-block">.\nettest.exe -s -c /path/to/server.crt -k /path/to/server.key</div>
                 
                 <p>The server will start on the default TLS port 443 (or the port specified in config/arguments -L).</p>
                 
@@ -640,7 +643,7 @@ Listening on port 443 (TLS)
                 <p>Configuration file:</p>
                 <div class="code-block">tls_port = 8443</div>
                 <p>Command line:</p>
-                <div class="code-block">-p 8443</div>
+                <div class="code-block">-L 8443</div>
                 
                 <h3>Certificate File Paths</h3>
                 <p>You can specify absolute or relative paths to certificate files:</p>
