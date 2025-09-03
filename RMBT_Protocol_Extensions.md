@@ -40,7 +40,7 @@ The client requests to send a data stream to the RMBT Server consisting of chunk
 **Timing Measurements:**
 The server measures and reports:
 - \<t>: the number of nanoseconds passed since receiving the PUTTIMERESULT command
-- \<b>: the cumulative number of bytes received at each measurement point
+- \<b>: the cumulative number of bytes received at each measurement point (after each chunk)
 - \<INTERVAL\>: (optional) minimum time interval in milliseconds between timing reports to reduce channel congestion
 
 **Format:**
