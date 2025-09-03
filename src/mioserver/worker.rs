@@ -259,13 +259,13 @@ impl Worker {
         for token in connections_to_remove {
             self.connections.remove(&token);
             {
-                println!("Worker {}: removing connection {:?}", self.id, token);
+                debug!("Worker {}: removing connection {:?}", self.id, token);
                 let mut counts = self.worker_connection_counts.lock().unwrap();
                 counts[self.id] -= 1;
-                println!("Worker {}: connection count decreased to {}", self.id, counts[self.id]);
+                debug!("Worker {}: connection count decreased to {}", self.id, counts[self.id]);
             }
 
-            println!(
+            debug!(
                 "Worker {}: connection {:?} closed, remaining connections: {}",
                 self.id,
                 token,
