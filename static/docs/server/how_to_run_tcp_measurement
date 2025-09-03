@@ -54,7 +54,7 @@ Step 4: View Results
 The client will perform the measurement and display results including:
 - Download speed
 - Upload speed
-- Latency
+- Ping
 
 Troubleshooting
 
@@ -71,25 +71,6 @@ Connection Refused
 - Check the IP address is correct
 - Ensure both client and server are on the same network or have proper routing
 
-Additional Options
-
-Server Options
-- -s: Start in server mode
-- -p <port>: Specify port (default: 5005)
-- -log <level>: Set log level (trace, debug, info, warn, error)
-
-Client Options
-- -c <address>: Connect to server at specified address
-- -p <port>: Connect to specified port (default: 5005)
-- -t <threads>: Number of parallel threads (default: 3)
-- -log <level>: Set log level
-
-Example with Custom Options
-Server with custom port and debug logging:
-./nettest -s -p 8080 -log debug
-
-Client with custom settings:
-./nettest -c 192.168.1.100 -p 8080 -t 5 -log info
 
 Protocol Information
 

@@ -439,7 +439,7 @@ Listening on port 5005
                 <ul>
                     <li>Download speed</li>
                     <li>Upload speed</li>
-                    <li>Latency</li>
+                    <li>Ping</li>
                 </ul>
             </div>
             
@@ -466,31 +466,7 @@ Client: ./nettest -c &lt;server_ip&gt; -p 5006
                 </div>
             </div>
             
-            <div class="content-card">
-                <h2>Additional Options</h2>
-                
-                <h3>Server Options</h3>
-                <ul>
-                    <li><span class="code-inline">-s</span> - Start in server mode</li>
-                    <li><span class="code-inline">-p &lt;port&gt;</span> - Specify port (default: 5005)</li>
-                    <li><span class="code-inline">-log &lt;level&gt;</span> - Set log level (trace, debug, info, warn, error)</li>
-                </ul>
-                
-                <h3>Client Options</h3>
-                <ul>
-                    <li><span class="code-inline">-c &lt;address&gt;</span> - Connect to server at specified address</li>
-                    <li><span class="code-inline">-p &lt;port&gt;</span> - Connect to specified port (default: 5005)</li>
-                    <li><span class="code-inline">-t &lt;threads&gt;</span> - Number of parallel threads (default: 3)</li>
-                    <li><span class="code-inline">-log &lt;level&gt;</span> - Set log level</li>
-                </ul>
-                
-                <h3>Example with Custom Options</h3>
-                <p>Server with custom port and debug logging:</p>
-                <div class="code-block">./nettest -s -p 8080 -log debug</div>
-                
-                <p>Client with custom settings:</p>
-                <div class="code-block">./nettest -c 192.168.1.100 -p 8080 -t 5 -log info</div>
-            </div>
+        
             
             <div class="content-card">
                 <h2>Protocol Information</h2>
