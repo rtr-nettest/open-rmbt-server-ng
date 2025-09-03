@@ -7,7 +7,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "cp test-results.html build/",
+    "postbuild": "cp test-results.html build/ && cp docs.html build/ && mkdir -p build/api && cp api/* build/api/",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "concurrently \"npm run start\" \"npm run server\"",
