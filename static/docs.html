@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nettest Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #2a2a2a;
+            border-right: 1px solid #444;
+            padding: 20px 0;
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #444;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header h1 {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin: 0;
+        }
+        
+        .nav-link {
+            display: block;
+            padding: 12px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background: #333;
+            border-left-color: #00d4ff;
+        }
+        
+        .nav-link.active {
+            background: #333;
+            border-left-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            max-width: calc(100% - 280px);
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-header {
+            margin-bottom: 30px;
+        }
+        
+        .section-header h1 {
+            color: #00d4ff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .section-header p {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        
+        .content-card {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 1px solid #444;
+        }
+        
+        .content-card h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .content-card h3 {
+            color: #ffffff;
+            margin: 25px 0 15px 0;
+            font-size: 1.3rem;
+        }
+        
+        .content-card p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .content-card ul, .content-card ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        
+        .content-card li {
+            margin-bottom: 8px;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+        
+        .code-block {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            color: #00d4ff;
+            overflow-x: auto;
+        }
+        
+        .code-inline {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #00d4ff;
+            font-size: 0.9em;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #444;
+        }
+        
+        .feature-card h4 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .feature-card p {
+            color: #e0e0e0;
+            font-size: 0.95rem;
+        }
+        
+        .download-section {
+            background: linear-gradient(135deg, #00d4ff20, #ff6b6b20);
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .download-section h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+        }
+        
+        .download-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .download-link {
+            display: block;
+            background: #333;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #444;
+        }
+        
+        .download-link:hover {
+            background: #444;
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .troubleshooting-item {
+            background: #333;
+            border-left: 4px solid #ff6b6b;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .troubleshooting-item h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .troubleshooting-item p {
+            color: #e0e0e0;
+            margin-bottom: 0;
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            background: #333;
+            border: none;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 20px;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .section-header h1 {
+                font-size: 2rem;
+            }
+            
+            .content-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>📚 Nettest Docs</h1>
+            <p>Complete documentation</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#overview" class="nav-link active" onclick="showSection('overview')">Overview</a>
+            </li>
+            <li class="nav-item">
+                <a href="#tcp-measurement" class="nav-link" onclick="showSection('tcp-measurement')">How to Run TCP Measurement</a>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <!-- Overview Section -->
+        <section id="overview" class="content-section active">
+            <div class="section-header">
+                <h1>🚀 Nettest Overview</h1>
+                <p>High-performance network speed measurement tool</p>
+            </div>
+            
+            <div class="content-card">
+                <h2>What is Nettest?</h2>
+                <p><strong>Nettest</strong> is a high-performance server and client for network speed measurement, written in Rust. The tool supports modern communication protocols and provides real-time accurate measurements with beautiful visualization.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🚀 High Performance</h4>
+                        <p>Multithreading support with asynchronous architecture for efficient resource utilization and smart load distribution between workers.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🌐 Multi-Protocol Support</h4>
+                        <p>TCP connections for maximum performance, WebSocket for browser clients, and TLS/SSL for secure connections.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Real-Time Visualization</h4>
+                        <p>Interactive speed graphs with real-time download and upload visualization, modern responsive interface.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔧 Flexible Configuration</h4>
+                        <p>Configurable number of workers, ports and addresses, SSL/TLS certificate support.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Key Features</h2>
+                <h3>Performance</h3>
+                <ul>
+                    <li><strong>Multithreading</strong> - Handle multiple clients simultaneously</li>
+                    <li><strong>Asynchronous architecture</strong> - Efficient resource utilization</li>
+                    <li><strong>Connection queue</strong> - Smart load distribution between workers</li>
+                </ul>
+                
+                <h3>Protocols</h3>
+                <ul>
+                    <li><strong>TCP connections</strong> - Direct connection for maximum performance</li>
+                    <li><strong>WebSocket</strong> - Browser client support</li>
+                    <li><strong>TLS/SSL</strong> - Secure connections</li>
+                </ul>
+                
+                <h3>Visualization</h3>
+                <ul>
+                    <li><strong>Interactive speed graphs</strong> - Real-time download and upload visualization</li>
+                    <li><strong>Beautiful UI</strong> - Modern, responsive interface</li>
+                    <li><strong>Live measurements</strong> - See your network performance in real-time</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- How to Run TCP Measurement Section -->
+        <section id="tcp-measurement" class="content-section">
+            <div class="section-header">
+                <h1>🔧 How to Run TCP Measurement</h1>
+                <p>Complete guide to setting up and running TCP measurements</p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Prerequisites</h2>
+                <ul>
+                    <li>Download the nettest binary from GitHub Releases</li>
+                    <li>Choose the appropriate version for your operating system and architecture</li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 1: Download nettest</h2>
+                <p>Visit <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: #00d4ff;">https://github.com/specure/nettest/releases</a> and download the latest release for your platform:</p>
+                
+                <h3>Linux/macOS</h3>
+                <p>Download and extract:</p>
+                <div class="code-block">
+wget https://github.com/specure/nettest/releases/download/latest/nettest-&lt;distribution&gt;-&lt;arch&gt;.tar.gz
+tar -xzf nettest-&lt;distribution&gt;-&lt;arch&gt;.tar.gz
+                </div>
+                
+                <h3>Windows</h3>
+                <p>Download and extract:</p>
+                <div class="code-block">
+Invoke-WebRequest -Uri "https://github.com/specure/nettest/releases/download/latest/nettest-windows-x86_64.zip" -OutFile "nettest-windows-x86_64.zip"
+Expand-Archive -Path "nettest-windows-x86_64.zip" -DestinationPath "."
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 2: Start the Server</h2>
+                <p>Run nettest in server mode. The server will start on the default port 5005:</p>
+                
+                <h3>Linux/macOS</h3>
+                <div class="code-block">./nettest -s</div>
+                
+                <h3>Windows</h3>
+                <div class="code-block">.\nettest.exe -s</div>
+                
+                <p>You should see output similar to:</p>
+                <div class="code-block">
+Nettest Broadband Test Server
+Listening on port 5005
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 3: Run the Client</h2>
+                <p>Open a new terminal/command prompt and run nettest in client mode, specifying the server's IP address:</p>
+                
+                <h3>Linux/macOS</h3>
+                <div class="code-block">./nettest -c &lt;server_ip_address&gt;</div>
+                
+                <h3>Windows</h3>
+                <div class="code-block">.\nettest.exe -c &lt;server_ip_address&gt;</div>
+                
+                <h3>Examples:</h3>
+                <ul>
+                    <li>For local testing: <span class="code-inline">./nettest -c 127.0.0.1</span> or <span class="code-inline">./nettest -c localhost</span></li>
+                    <li>For remote server: <span class="code-inline">./nettest -c 192.168.1.100</span></li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 4: View Results</h2>
+                <p>The client will perform the measurement and display results including:</p>
+                <ul>
+                    <li>Download speed</li>
+                    <li>Upload speed</li>
+                    <li>Latency</li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Troubleshooting</h2>
+                
+                <div class="troubleshooting-item">
+                    <h4>Port Already in Use</h4>
+                    <p>If port 5005 is already in use, you can specify a different port:</p>
+                    <div class="code-block">
+Server: ./nettest -s -p 5006
+Client: ./nettest -c &lt;server_ip&gt; -p 5006
+                    </div>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Firewall Issues</h4>
+                    <p>Make sure the server port (default 5005) is open in your firewall.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Connection Refused</h4>
+                    <p>Verify the server is running, check the IP address is correct, and ensure both client and server are on the same network or have proper routing.</p>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Additional Options</h2>
+                
+                <h3>Server Options</h3>
+                <ul>
+                    <li><span class="code-inline">-s</span> - Start in server mode</li>
+                    <li><span class="code-inline">-p &lt;port&gt;</span> - Specify port (default: 5005)</li>
+                    <li><span class="code-inline">-log &lt;level&gt;</span> - Set log level (trace, debug, info, warn, error)</li>
+                </ul>
+                
+                <h3>Client Options</h3>
+                <ul>
+                    <li><span class="code-inline">-c &lt;address&gt;</span> - Connect to server at specified address</li>
+                    <li><span class="code-inline">-p &lt;port&gt;</span> - Connect to specified port (default: 5005)</li>
+                    <li><span class="code-inline">-t &lt;threads&gt;</span> - Number of parallel threads (default: 3)</li>
+                    <li><span class="code-inline">-log &lt;level&gt;</span> - Set log level</li>
+                </ul>
+                
+                <h3>Example with Custom Options</h3>
+                <p>Server with custom port and debug logging:</p>
+                <div class="code-block">./nettest -s -p 8080 -log debug</div>
+                
+                <p>Client with custom settings:</p>
+                <div class="code-block">./nettest -c 192.168.1.100 -p 8080 -t 5 -log info</div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Protocol Information</h2>
+                <p>The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol for accurate bandwidth measurements. For detailed protocol specifications, see the RMBT Protocol Extensions documentation.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+            
+            // Close mobile sidebar if open
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        }
+        
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>

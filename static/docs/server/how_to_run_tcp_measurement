@@ -1,0 +1,96 @@
+How to Run TCP Measurement
+
+This guide explains how to set up and run a TCP measurement using the nettest tool.
+
+Prerequisites
+
+- Download the nettest binary from GitHub Releases
+- Choose the appropriate version for your operating system and architecture
+
+Step 1: Download nettest
+
+Visit https://github.com/specure/nettest/releases and download the latest release for your platform:
+
+Linux/macOS
+Download and extract:
+wget https://github.com/specure/nettest/releases/download/latest/nettest-<distribution>-<arch>.tar.gz
+tar -xzf nettest-<distribution>-<arch>.tar.gz
+
+Windows
+Download and extract:
+Invoke-WebRequest -Uri "https://github.com/specure/nettest/releases/download/latest/nettest-windows-x86_64.zip" -OutFile "nettest-windows-x86_64.zip"
+Expand-Archive -Path "nettest-windows-x86_64.zip" -DestinationPath "."
+
+Step 2: Start the Server
+
+Run nettest in server mode. The server will start on the default port 5005:
+
+Linux/macOS
+./nettest -s
+
+Windows
+.\nettest.exe -s
+
+You should see output similar to:
+Nettest Broadband Test Server
+Listening on port 5005
+
+Step 3: Run the Client
+
+Open a new terminal/command prompt and run nettest in client mode, specifying the server's IP address:
+
+Linux/macOS
+./nettest -c <server_ip_address>
+
+Windows
+.\nettest.exe -c <server_ip_address>
+
+Examples:
+- For local testing: ./nettest -c 127.0.0.1 or ./nettest -c localhost
+- For remote server: ./nettest -c 192.168.1.100
+
+Step 4: View Results
+
+The client will perform the measurement and display results including:
+- Download speed
+- Upload speed
+- Latency
+
+Troubleshooting
+
+Port Already in Use
+If port 5005 is already in use, you can specify a different port:
+Server: ./nettest -s -p 5006
+Client: ./nettest -c <server_ip> -p 5006
+
+Firewall Issues
+Make sure the server port (default 5005) is open in your firewall.
+
+Connection Refused
+- Verify the server is running
+- Check the IP address is correct
+- Ensure both client and server are on the same network or have proper routing
+
+Additional Options
+
+Server Options
+- -s: Start in server mode
+- -p <port>: Specify port (default: 5005)
+- -log <level>: Set log level (trace, debug, info, warn, error)
+
+Client Options
+- -c <address>: Connect to server at specified address
+- -p <port>: Connect to specified port (default: 5005)
+- -t <threads>: Number of parallel threads (default: 3)
+- -log <level>: Set log level
+
+Example with Custom Options
+Server with custom port and debug logging:
+./nettest -s -p 8080 -log debug
+
+Client with custom settings:
+./nettest -c 192.168.1.100 -p 8080 -t 5 -log info
+
+Protocol Information
+
+The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol for accurate bandwidth measurements. For detailed protocol specifications, see the RMBT Protocol Extensions documentation.
