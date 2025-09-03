@@ -490,8 +490,11 @@ Client: ./nettest -c &lt;server_ip&gt; -p 5006
             // Show selected section
             document.getElementById(sectionId).classList.add('active');
             
-            // Add active class to clicked nav link
-            event.target.classList.add('active');
+            // Add active class to corresponding nav link
+            const navLink = document.querySelector(`a[href="#${sectionId}"]`);
+            if (navLink) {
+                navLink.classList.add('active');
+            }
             
             // Close mobile sidebar if open
             if (window.innerWidth <= 768) {
@@ -502,6 +505,22 @@ Client: ./nettest -c &lt;server_ip&gt; -p 5006
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
         }
+        
+        // Handle hash changes and initial load
+        function handleHashChange() {
+            const hash = window.location.hash.substring(1); // Remove #
+            if (hash) {
+                showSection(hash);
+            } else {
+                showSection('overview'); // Default to overview
+            }
+        }
+        
+        // Listen for hash changes
+        window.addEventListener('hashchange', handleHashChange);
+        
+        // Handle initial load
+        document.addEventListener('DOMContentLoaded', handleHashChange);
         
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', function(event) {
