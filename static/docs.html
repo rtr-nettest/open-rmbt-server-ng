@@ -305,6 +305,9 @@
             <li class="nav-item">
                 <a href="#tcp-measurement" class="nav-link" onclick="showSection('tcp-measurement')">How to Run TCP Measurement</a>
             </li>
+            <li class="nav-item">
+                <a href="#tls-measurement" class="nav-link" onclick="showSection('tls-measurement')">How to Run TLS Measurement</a>
+            </li>
         </ul>
     </nav>
 
@@ -471,6 +474,194 @@ Client: ./nettest -c &lt;server_ip&gt; -p 5006
             <div class="content-card">
                 <h2>Protocol Information</h2>
                 <p>The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol for accurate bandwidth measurements. For detailed protocol specifications, see the RMBT Protocol Extensions documentation.</p>
+            </div>
+        </section>
+
+        <!-- How to Run TLS Measurement Section -->
+        <section id="tls-measurement" class="content-section">
+            <div class="section-header">
+                <h1>🔒 How to Run TLS Measurement</h1>
+                <p>Complete guide to setting up and running TLS measurements</p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Prerequisites</h2>
+                <ul>
+                    <li>Download the nettest binary from GitHub Releases</li>
+                    <li>Choose the appropriate version for your operating system and architecture</li>
+                    <li>Have TLS certificate files ready (certificate and private key)</li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 1: Download nettest</h2>
+                <p>Visit <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: #00d4ff;">https://github.com/specure/nettest/releases</a> and download the latest release for your platform:</p>
+                
+                <h3>Linux/macOS</h3>
+                <p>Download and extract:</p>
+                <div class="code-block">
+wget https://github.com/specure/nettest/releases/download/latest/nettest-&lt;distribution&gt;-&lt;arch&gt;.tar.gz
+tar -xzf nettest-&lt;distribution&gt;-&lt;arch&gt;.tar.gz
+                </div>
+                
+                <h3>Windows</h3>
+                <p>Download and extract:</p>
+                <div class="code-block">
+Invoke-WebRequest -Uri "https://github.com/specure/nettest/releases/download/latest/nettest-windows-x86_64.zip" -OutFile "nettest-windows-x86_64.zip"
+Expand-Archive -Path "nettest-windows-x86_64.zip" -DestinationPath "."
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 2: Prepare TLS Certificates</h2>
+                <p>You need two files for TLS:</p>
+                <ul>
+                    <li>Certificate file (usually .crt or .pem)</li>
+                    <li>Private key file (usually .key or .pem)</li>
+                </ul>
+                
+                <p>Example certificate files:</p>
+                <ul>
+                    <li>server.crt (certificate)</li>
+                    <li>server.key (private key)</li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 3: Configure TLS</h2>
+                <p>You can specify TLS certificate files in two ways:</p>
+                
+                <h3>Method 1: Configuration File</h3>
+                <p>Create or edit nettest.conf file:</p>
+                <ul>
+                    <li>Linux/macOS: <span class="code-inline">~/.config/nettest.conf</span></li>
+                    <li>Other systems: <span class="code-inline">/etc/nettest.conf</span></li>
+                </ul>
+                
+                <p>Add TLS configuration:</p>
+                <div class="code-block">
+tls_cert = /path/to/server.crt
+tls_key = /path/to/server.key
+tls_port = 443
+                </div>
+                
+                <h3>Method 2: Command Line Arguments</h3>
+                <p>Pass certificate files directly via command line:</p>
+                <div class="code-block">
+./nettest -s -c /path/to/server.crt -k /path/to/server.key -L 8443
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 4: Start the TLS Server</h2>
+                <p>Run nettest in server mode with TLS enabled:</p>
+                
+                <h3>Linux/macOS</h3>
+                <div class="code-block">./nettest -s --tls</div>
+                
+                <h3>Windows</h3>
+                <div class="code-block">.\nettest.exe -s --tls</div>
+                
+                <p>The server will start on the default TLS port 443 (or the port specified in config/arguments -L).</p>
+                
+                <p>You should see output similar to:</p>
+                <div class="code-block">
+Nettest Broadband Test Server
+Listening on port 5005 (TCP)
+Listening on port 443 (TLS)
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 5: Run the TLS Client</h2>
+                <p>Open a new terminal/command prompt and run nettest in client mode with TLS:</p>
+                
+                <h3>Linux/macOS</h3>
+                <div class="code-block">./nettest -c &lt;server_ip_address&gt; -tls</div>
+                
+                <h3>Windows</h3>
+                <div class="code-block">.\nettest.exe -c &lt;server_ip_address&gt; -tls</div>
+                
+                <h3>Examples:</h3>
+                <ul>
+                    <li>For local testing: <span class="code-inline">./nettest -c 127.0.0.1 -tls</span></li>
+                    <li>For remote server: <span class="code-inline">./nettest -c 192.168.1.100 -tls</span></li>
+                    <li>With custom TLS port: <span class="code-inline">./nettest -c &lt;server_ip&gt; -tls -p 8443</span></li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Step 6: View Results</h2>
+                <p>The client will perform the TLS measurement and display results including:</p>
+                <ul>
+                    <li>Download speed</li>
+                    <li>Upload speed</li>
+                    <li>Ping</li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Troubleshooting</h2>
+                
+                <div class="troubleshooting-item">
+                    <h4>Certificate Issues</h4>
+                    <p>Make sure certificate files are readable and valid:</p>
+                    <ul>
+                        <li>Check file permissions</li>
+                        <li>Verify certificate is not expired</li>
+                        <li>Ensure private key matches the certificate</li>
+                    </ul>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Firewall Issues</h4>
+                    <p>Make sure the TLS port (default 443) is open in your firewall.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Connection Refused</h4>
+                    <p>Verify the server is running with TLS enabled, check the IP address is correct, and ensure both client and server are using the same TLS port.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>TLS Handshake Failures</h4>
+                    <p>Check that:</p>
+                    <ul>
+                        <li>Certificate files are correctly specified</li>
+                        <li>Certificate is valid and not expired</li>
+                        <li>Private key matches the certificate</li>
+                        <li>TLS port is accessible</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Additional Options</h2>
+                
+                <h3>Custom TLS Port</h3>
+                <p>You can change the TLS port from the default 443:</p>
+                <p>Configuration file:</p>
+                <div class="code-block">tls_port = 8443</div>
+                <p>Command line:</p>
+                <div class="code-block">-p 8443</div>
+                
+                <h3>Certificate File Paths</h3>
+                <p>You can specify absolute or relative paths to certificate files:</p>
+                <p>Absolute paths:</p>
+                <div class="code-block">
+--tls-cert /etc/ssl/certs/server.crt
+--tls-key /etc/ssl/private/server.key
+                </div>
+                <p>Relative paths:</p>
+                <div class="code-block">
+--tls-cert ./certs/server.crt
+--tls-key ./certs/server.key
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Protocol Information</h2>
+                <p>The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol over TLS for secure bandwidth measurements. TLS provides encryption and authentication for secure network testing.</p>
             </div>
         </section>
     </main>

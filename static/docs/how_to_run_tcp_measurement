@@ -60,7 +60,7 @@ Troubleshooting
 
 Port Already in Use
 If port 5005 is already in use, you can specify a different port:
-Server: ./nettest -s -p 5006
+Server: ./nettest -s -l 5006
 Client: ./nettest -c <server_ip> -p 5006
 
 Firewall Issues

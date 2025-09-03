@@ -1,0 +1,143 @@
+How to Run TLS Measurement
+
+Complete guide to setting up and running TLS measurements
+
+Prerequisites
+
+Download the nettest binary from GitHub Releases
+Choose the appropriate version for your operating system and architecture
+Have TLS certificate files ready (certificate and private key)
+
+Step 1: Download nettest
+
+Visit https://github.com/specure/nettest/releases and download the latest release for your platform:
+
+Linux/macOS
+
+Download and extract:
+
+wget https://github.com/specure/nettest/releases/download/latest/nettest-<distribution>-<arch>.tar.gz
+tar -xzf nettest-<distribution>-<arch>.tar.gz
+
+Windows
+
+Download and extract:
+
+Invoke-WebRequest -Uri "https://github.com/specure/nettest/releases/download/latest/nettest-windows-x86_64.zip" -OutFile "nettest-windows-x86_64.zip"
+Expand-Archive -Path "nettest-windows-x86_64.zip" -DestinationPath "."
+
+Step 2: Prepare TLS Certificates
+
+You need two files for TLS:
+- Certificate file (usually .crt or .pem)
+- Private key file (usually .key or .pem)
+
+Example certificate files:
+- server.crt (certificate)
+- server.key (private key)
+
+Step 3: Configure TLS
+
+You can specify TLS certificate files in two ways:
+
+Method 1: Configuration File
+
+Create or edit nettest.conf file:
+
+Linux/macOS: ~/.config/nettest.conf
+Other systems: /etc/nettest.conf
+
+Add TLS configuration:
+
+tls_cert = /path/to/server.crt
+tls_key = /path/to/server.key
+tls_port = 443
+
+Method 2: Command Line Arguments
+
+Pass certificate files directly via command line:
+
+./nettest -s -c /path/to/server.crt -k /path/to/server.key -L 8443
+
+The server will start on the default TLS port 443 (or the port specified in config/arguments -L).
+
+You should see output similar to:
+
+Nettest Broadband Test Server
+Listening on port 5005 (TCP)
+Listening on port 443 (TLS)
+
+Step 5: Run the TLS Client
+
+Open a new terminal/command prompt and run nettest in client mode with TLS:
+
+Linux/macOS
+
+./nettest -c <server_ip_address> -tls
+
+Windows
+
+.\nettest.exe -c <server_ip_address> -tls
+
+Examples:
+
+For local testing: ./nettest -c 127.0.0.1 -tls
+For remote server: ./nettest -c 192.168.1.100 -tls
+With custom TLS port: ./nettest -c <server_ip> -tls -p 8443
+
+Step 6: View Results
+
+The client will perform the TLS measurement and display results including:
+
+Download speed
+Upload speed
+Ping
+
+Make sure certificate files are readable and valid:
+- Check file permissions
+- Verify certificate is not expired
+- Ensure private key matches the certificate
+
+Firewall Issues
+
+Make sure the TLS port (default 443) is open in your firewall.
+
+Connection Refused
+
+Verify the server is running with TLS enabled, check the IP address is correct, and ensure both client and server are using the same TLS port.
+
+TLS Handshake Failures
+
+Check that:
+- Certificate files are correctly specified
+- Certificate is valid and not expired
+- Private key matches the certificate
+- TLS port is accessible
+
+Additional Options
+
+Custom TLS Port
+
+You can change the TLS port from the default 443:
+
+Configuration file:
+tls_port = 8443
+
+Command line:
+-p 8443
+
+Certificate File Paths
+
+You can specify absolute or relative paths to certificate files:
+
+Absolute paths:
+--tls-cert /etc/ssl/certs/server.crt
+--tls-key /etc/ssl/private/server.key
+
+Relative paths:
+--tls-cert ./certs/server.crt
+--tls-key ./certs/server.key
+
+Protocol Information
+
+The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol over TLS for secure bandwidth measurements. TLS provides encryption and authentication for secure network testing.
