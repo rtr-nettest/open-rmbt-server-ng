@@ -126,18 +126,6 @@ tls_port = 8443
 Command line:
 -p 8443
 
-Certificate File Paths
-
-You can specify absolute or relative paths to certificate files:
-
-Absolute paths:
---tls-cert /etc/ssl/certs/server.crt
---tls-key /etc/ssl/private/server.key
-
-Relative paths:
---tls-cert ./certs/server.crt
---tls-key ./certs/server.key
-
 Protocol Information
 
 The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol over TLS for secure bandwidth measurements. TLS provides encryption and authentication for secure network testing.

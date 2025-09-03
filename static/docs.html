@@ -534,7 +534,7 @@ Expand-Archive -Path "nettest-windows-x86_64.zip" -DestinationPath "."
                 <h3>Method 1: Configuration File</h3>
                 <p>Create or edit nettest.conf file:</p>
                 <ul>
-                    <li>Linux/macOS: <span class="code-inline">~/.config/nettest.conf</span></li>
+                    <li>macOS: <span class="code-inline">~/.config/nettest.conf</span></li>
                     <li>Other systems: <span class="code-inline">/etc/nettest.conf</span></li>
                 </ul>
                 
@@ -644,18 +644,6 @@ Listening on port 443 (TLS)
                 <div class="code-block">tls_port = 8443</div>
                 <p>Command line:</p>
                 <div class="code-block">-L 8443</div>
-                
-                <h3>Certificate File Paths</h3>
-                <p>You can specify absolute or relative paths to certificate files:</p>
-                <p>Absolute paths:</p>
-                <div class="code-block">
---tls-cert /etc/ssl/certs/server.crt
---tls-key /etc/ssl/private/server.key
-                </div>
-                <p>Relative paths:</p>
-                <div class="code-block">
---tls-cert ./certs/server.crt
---tls-key ./certs/server.key
                 </div>
             </div>
             
