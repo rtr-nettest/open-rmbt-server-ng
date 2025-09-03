@@ -557,10 +557,7 @@ tls_port = 443
                 <p>Run nettest in server mode with TLS enabled:</p>
                 
                 <h3>Linux/macOS</h3>
-                <div class="code-block">./nettest -s --tls</div>
-                
-                <h3>Windows</h3>
-                <div class="code-block">.\nettest.exe -s --tls</div>
+                <div class="code-block">./nettest -s -c /path/to/server.crt -k /path/to/server.key </div>
                 
                 <p>The server will start on the default TLS port 443 (or the port specified in config/arguments -L).</p>
                 
