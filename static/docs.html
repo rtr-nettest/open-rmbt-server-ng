@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nettest Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #2a2a2a;
+            border-right: 1px solid #444;
+            padding: 20px 0;
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #444;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header h1 {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin: 0;
+        }
+        
+        .nav-link {
+            display: block;
+            padding: 12px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background: #333;
+            border-left-color: #00d4ff;
+        }
+        
+        .nav-link.active {
+            background: #333;
+            border-left-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            max-width: calc(100% - 280px);
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-header {
+            margin-bottom: 30px;
+        }
+        
+        .section-header h1 {
+            color: #00d4ff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .section-header p {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        
+        .content-card {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 1px solid #444;
+        }
+        
+        .content-card h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .content-card h3 {
+            color: #ffffff;
+            margin: 25px 0 15px 0;
+            font-size: 1.3rem;
+        }
+        
+        .content-card p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .content-card ul, .content-card ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        
+        .content-card li {
+            margin-bottom: 8px;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+        
+        .code-block {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            color: #00d4ff;
+            overflow-x: auto;
+        }
+        
+        .code-inline {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #00d4ff;
+            font-size: 0.9em;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #444;
+        }
+        
+        .feature-card h4 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .feature-card p {
+            color: #e0e0e0;
+            font-size: 0.95rem;
+        }
+        
+        .download-section {
+            background: linear-gradient(135deg, #00d4ff20, #ff6b6b20);
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .download-section h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+        }
+        
+        .download-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .download-link {
+            display: block;
+            background: #333;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #444;
+        }
+        
+        .download-link:hover {
+            background: #444;
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .troubleshooting-item {
+            background: #333;
+            border-left: 4px solid #ff6b6b;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .troubleshooting-item h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .troubleshooting-item p {
+            color: #e0e0e0;
+            margin-bottom: 0;
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            background: #333;
+            border: none;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 20px;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .section-header h1 {
+                font-size: 2rem;
+            }
+            
+            .content-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>📚 Nettest Docs</h1>
+            <p>Complete documentation</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#overview" class="nav-link active" onclick="showSection('overview')">Overview</a>
+            </li>
+            <li class="nav-item">
+                <a href="#tcp-measurement" class="nav-link" onclick="showSection('tcp-measurement')">How to Run TCP Measurement</a>
+            </li>
+            <li class="nav-item">
+                <a href="#tls-measurement" class="nav-link" onclick="showSection('tls-measurement')">How to Run TLS Measurement</a>
+            </li>
+            <li class="nav-item">
+                <a href="#websocket-measurement" class="nav-link" onclick="showSection('websocket-measurement')">How to Run WebSocket Measurement</a>
+            </li>
+            <li class="nav-item">
+                <a href="#thread-configuration" class="nav-link" onclick="showSection('thread-configuration')">Thread Configuration</a>
+            </li>
+            <li class="nav-item">
+                <a href="#graph-visualization" class="nav-link" onclick="showSection('graph-visualization')">Graph Visualization</a>
+            </li>
+            <li class="nav-item">
+                <a href="#server-registration" class="nav-link" onclick="showSection('server-registration')">Server Registration</a>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <!-- Overview Section -->
+        <section id="overview" class="content-section active">
+            <div class="section-header">
+                <h1>🚀 Nettest Overview</h1>
+                <p>High-performance network speed measurement tool</p>
+            </div>
+            
+            <div class="content-card">
+                <h2>What is Nettest?</h2>
+                <p><strong>Nettest</strong> is a high-performance server and client for network speed measurement, written in Rust. The tool supports modern communication protocols and provides real-time accurate measurements with beautiful visualization.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🚀 High Performance</h4>
+                        <p>Multithreading support with asynchronous architecture for efficient resource utilization and smart load distribution between workers.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🌐 Multi-Protocol Support</h4>
+                        <p>TCP connections for maximum performance, WebSocket for browser clients, and TLS/SSL for secure connections.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Real-Time Visualization</h4>
+                        <p>Interactive speed graphs with real-time download and upload visualization, modern responsive interface.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔧 Flexible Configuration</h4>
+                        <p>Configurable number of workers, ports and addresses, SSL/TLS certificate support.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Key Features</h2>
+                <h3>Performance</h3>
+                <ul>
+                    <li><strong>Multithreading</strong> - Handle multiple clients simultaneously</li>
+                    <li><strong>Asynchronous architecture</strong> - Efficient resource utilization</li>
+                    <li><strong>Connection queue</strong> - Smart load distribution between workers</li>
+                </ul>
+                
+                <h3>Protocols</h3>
+                <ul>
+                    <li><strong>TCP connections</strong> - Direct connection for maximum performance</li>
+                    <li><strong>WebSocket</strong> - Browser client support</li>
+                    <li><strong>TLS/SSL</strong> - Secure connections</li>
+                </ul>
+                
+                <h3>Visualization</h3>
+                <ul>
+                    <li><strong>Interactive speed graphs</strong> - Real-time download and upload visualization</li>
+                    <li><strong>Beautiful UI</strong> - Modern, responsive interface</li>
+                    <li><strong>Live measurements</strong> - See your network performance in real-time</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- How to Run TCP Measurement Section -->
+        <section id="tcp-measurement" class="content-section">
+            <div class="section-header">
+                <h1>🔧 How to Run TCP Measurement</h1>
+                <p>Complete guide to setting up and running TCP measurements</p>
+            </div>
+            
+            <div class="download-section">
+                <h3>📹 Video Tutorial</h3>
+                <p><a href="https://youtu.be/lP3tKqVywPM" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Run TCP Measurement</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Download</h2>
+                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: #00d4ff;">GitHub Releases</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Start Server</h2>
+                <p>Run nettest in server mode:</p>
+                <div class="code-block">./nettest -s</div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Run Client</h2>
+                <p>Run nettest in client mode:</p>
+                <div class="code-block">./nettest -c &lt;server_ip_address&gt;</div>
+                
+            </div>
+            
+            <div class="content-card">
+                <h2>Troubleshooting</h2>
+                
+                <div class="troubleshooting-item">
+                    <h4>Port Already in Use</h4>
+                    <p>If port 5005 is already in use, you can specify a different port:</p>
+                    <div class="code-block">
+Server: ./nettest -s -l 5006
+Client: ./nettest -c &lt;server_ip&gt; -p 5006
+                    </div>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Firewall Issues</h4>
+                    <p>Make sure the server port (default 5005) is open in your firewall.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Connection Refused</h4>
+                    <p>Verify the server is running, check the IP address is correct, and ensure both client and server are on the same network or have proper routing.</p>
+                </div>
+            </div>
+            
+        
+            
+            <div class="content-card">
+                <h2>Protocol Information</h2>
+                <p>The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol for accurate bandwidth measurements. For detailed protocol specifications, see the RMBT Protocol Extensions documentation.</p>
+            </div>
+        </section>
+
+        <!-- How to Run TLS Measurement Section -->
+        <section id="tls-measurement" class="content-section">
+            <div class="section-header">
+                <h1>🔒 How to Run TLS Measurement</h1>
+                <p>Complete guide to setting up and running TLS measurements</p>
+            </div>
+            
+            <div class="download-section">
+                <h3>📹 Video Tutorial</h3>
+                <p><a href="https://youtu.be/TmRT-syT4_s" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Run TLS Measurement</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Download</h2>
+                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: #00d4ff;">GitHub Releases</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Prepare TLS Certificates</h2>
+                <p>You need two files for TLS:</p>
+                <ul>
+                    <li>Certificate file (usually .crt or .pem)</li>
+                    <li>Private key file (usually .key or .pem)</li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Start TLS Server</h2>
+                <p>There are two ways to configure TLS certificates:</p>
+                
+                <h3>Method 1: Command Line Arguments</h3>
+                <p>Specify certificate files directly via command line:</p>
+                <div class="code-block">./nettest -s -c /path/to/server.crt -k /path/to/server.key</div>
+                
+                <h3>Method 2: Configuration File</h3>
+                <p>Create or edit nettest.conf file:</p>
+                <ul>
+                    <li>macOS: <span class="code-inline">~/.config/nettest.conf</span></li>
+                    <li>Other systems: <span class="code-inline">/etc/nettest.conf</span></li>
+                </ul>
+                
+                <p>Add TLS configuration:</p>
+                <div class="code-block">
+tls_cert = /path/to/server.crt
+tls_key = /path/to/server.key
+tls_port = 443
+                </div>
+                
+                <p>Then run the server:</p>
+                <div class="code-block">./nettest -s</div>
+                
+                <h3>TLS Port Configuration</h3>
+                <p>TLS server runs on port <strong>443</strong> by default. You can change it:</p>
+                
+                <h4>Command Line</h4>
+                <div class="code-block">./nettest -s -c /path/to/server.crt -k /path/to/server.key -L 8443</div>
+                
+                <h4>Configuration File</h4>
+                <div class="code-block">tls_port = 8443</div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Run TLS Client</h2>
+                <p>Run nettest in client mode with TLS:</p>
+                <div class="code-block">./nettest -c &lt;server_ip_address&gt; -tls</div>
+                
+                <h3>Examples:</h3>
+                <ul>
+                    <li>Local: <span class="code-inline">./nettest -c 127.0.0.1 -tls</span></li>
+                    <li>Remote: <span class="code-inline">./nettest -c 192.168.1.100 -tls</span></li>
+                    <li>Custom TLS port: <span class="code-inline">./nettest -c &lt;server_ip&gt; -tls -p 8443</span></li>
+                </ul>
+                
+                <h3>Client Port Configuration</h3>
+                <p>If the server uses a custom TLS port, specify it with <span class="code-inline">-p</span>:</p>
+                <div class="code-block">./nettest -c &lt;server_ip&gt; -tls -p 8443</div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Troubleshooting</h2>
+                
+                <div class="troubleshooting-item">
+                    <h4>Certificate Issues</h4>
+                    <p>Make sure certificate files are readable and valid:</p>
+                    <ul>
+                        <li>Check file permissions</li>
+                        <li>Verify certificate is not expired</li>
+                        <li>Ensure private key matches the certificate</li>
+                    </ul>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Firewall Issues</h4>
+                    <p>Make sure the TLS port (default 443) is open in your firewall.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Connection Refused</h4>
+                    <p>Verify the server is running with TLS enabled, check the IP address is correct, and ensure both client and server are using the same TLS port.</p>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Protocol Information</h2>
+                <p>The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol over TLS for secure bandwidth measurements. TLS provides encryption and authentication for secure network testing.</p>
+            </div>
+        </section>
+
+        <!-- How to Run WebSocket Measurement Section -->
+        <section id="websocket-measurement" class="content-section">
+            <div class="section-header">
+                <h1>🌐 How to Run WebSocket Measurement</h1>
+                <p>Complete guide to setting up and running WebSocket measurements</p>
+            </div>
+            
+            <div class="download-section">
+                <h3>📹 Video Tutorial</h3>
+                <p><a href="https://youtu.be/ZeGCMTTxJxg" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Run WebSocket Measurement</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Download</h2>
+                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: #00d4ff;">GitHub Releases</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Start WebSocket Server</h2>
+                <p>Run nettest in server mode:</p>
+                <div class="code-block">./nettest -s</div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Run WebSocket Client</h2>
+                <p>Run nettest in client mode with WebSocket:</p>
+                <div class="code-block">./nettest -c &lt;server_ip_address&gt; -ws</div>
+                
+                <h3>Examples:</h3>
+                <ul>
+                    <li>Local: <span class="code-inline">./nettest -c 127.0.0.1 -ws</span></li>
+                    <li>Remote: <span class="code-inline">./nettest -c 192.168.1.100 -ws</span></li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>WebSocket + TLS</h2>
+                <p>For secure WebSocket connections, combine WebSocket with TLS:</p>
+                
+                <h3>Server</h3>
+                <div class="code-block">./nettest -s -tls -c /path/to/server.crt -k /path/to/server.key</div>
+                
+                <h3>Client</h3>
+                <div class="code-block">./nettest -c &lt;server_ip_address&gt; -ws -tls</div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Troubleshooting</h2>
+                
+                <div class="troubleshooting-item">
+                    <h4>WebSocket Connection Failed</h4>
+                    <p>Make sure the server is running with WebSocket enabled and the client is using the correct WebSocket flag.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Firewall Issues</h4>
+                    <p>Ensure WebSocket ports are open in your firewall. WebSocket typically uses the same port as the server (default 5005).</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Browser Compatibility</h4>
+                    <p>WebSocket measurements are ideal for browser-based clients and provide real-time communication capabilities.</p>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Protocol Information</h2>
+                <p>The nettest tool implements the RMBT (RTR Multithreaded Broadband Test) protocol over WebSocket for browser-compatible bandwidth measurements. WebSocket provides full-duplex communication and is ideal for web applications.</p>
+            </div>
+        </section>
+
+        <!-- Thread Configuration Section -->
+        <section id="thread-configuration" class="content-section">
+            <div class="section-header">
+                <h1>⚙️ Thread Configuration</h1>
+                <p>Optimize measurement quality by configuring the number of threads</p>
+            </div>
+            
+            <div class="download-section">
+                <h3>📹 Video Tutorial</h3>
+                <p><a href="https://youtu.be/DgvL_vr69fc" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Configure Threads</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Why Configure Threads?</h2>
+                <p>By default, nettest uses 3 threads for measurements. However, you can improve measurement accuracy and performance by using more threads, especially for high-speed connections.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🚀 Better Performance</h4>
+                        <p>Multiple threads can better utilize high-speed connections and provide more accurate measurements.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Improved Accuracy</h4>
+                        <p>Parallel data streams help overcome single-thread limitations and provide more reliable results.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>⚡ Faster Measurements</h4>
+                        <p>Concurrent data transfer reduces measurement time and provides better real-time feedback.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Configure Client Threads</h2>
+                <p>Use the <span class="code-inline">-t</span> parameter to specify the number of threads on the client side:</p>
+                
+                <div class="code-block">./nettest -c &lt;server_ip_address&gt; -t &lt;number_of_threads&gt;</div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Best Practices</h2>
+                
+                <div class="troubleshooting-item">
+                    <h4>Start Small</h4>
+                    <p>Begin with 2-4 threads and gradually increase based on your connection speed and system performance.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Monitor Performance</h4>
+                    <p>Too many threads can cause overhead. Monitor CPU usage and measurement consistency.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Network Conditions</h4>
+                    <p>Consider your network conditions. High-latency connections may benefit from fewer threads.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>System Resources</h4>
+                    <p>Ensure your system has sufficient CPU cores and memory to handle multiple threads efficiently.</p>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>Troubleshooting</h2>
+                
+                <div class="troubleshooting-item">
+                    <h4>High CPU Usage</h4>
+                    <p>If CPU usage is too high, reduce the number of threads. Start with fewer threads and increase gradually.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Inconsistent Results</h4>
+                    <p>If measurements are inconsistent, try reducing the number of threads or check for network congestion.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Connection Timeouts</h4>
+                    <p>Too many threads might overwhelm the server. Reduce thread count if you experience timeouts.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Graph Visualization Section -->
+        <section id="graph-visualization" class="content-section">
+            <div class="section-header">
+                <h1>📊 Graph Visualization</h1>
+                <p>Real-time visualization of upload and download speeds</p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Enable Graph Visualization</h2>
+                <p>Use the <span class="code-inline">-g</span> parameter to show real-time graphs of upload and download speeds on the client:</p>
+                
+                <div class="code-block">./nettest -c &lt;server_ip_address&gt; -g</div>
+            </div>
+            
+            <div class="content-card">
+                <h2>What You'll See</h2>
+                <p>The graph visualization provides real-time monitoring of your network performance:</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>📈 Download Speed</h4>
+                        <p>Real-time graph showing download speed over time with smooth curves and accurate measurements.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📤 Upload Speed</h4>
+                        <p>Live visualization of upload performance with detailed speed tracking and trend analysis.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>⏱️ Time Progress</h4>
+                        <p>Visual timeline showing measurement progress and speed variations throughout the test.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Server Registration Section -->
+        <section id="server-registration" class="content-section">
+            <div class="section-header">
+                <h1>🛰️ Server Registration</h1>
+                <p>Auto-registration of measurement servers</p>
+            </div>
+            
+            <div class="download-section">
+                <h3>📹 Video Tutorial</h3>
+                <p><a href="https://youtu.be/jOLfRSP6-Pg" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Configure Server Registration</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Enable Auto-Registration</h2>
+                <p>To enable auto-registration of a measurement server, configure the following fields in your <span class="code-inline">nettest.conf</span> file:</p>
+                
+                <div class="code-block">
+server_registration = true
+registration_token = "&lt;secret token&gt;"
+hostname = "&lt;unique hostname&gt;"
+                </div>
+                
+                <p>If <span class="code-inline">server_registration = false</span>, auto-registration is disabled.</p>
+            </div>
+            
+            <div class="content-card">
+                <h2>Configuration Parameters</h2>
+                
+                <h3>Required Parameters</h3>
+                <ul>
+                    <li><strong>server_registration</strong> - Set to <span class="code-inline">true</span> to enable auto-registration</li>
+                    <li><strong>hostname</strong> - Required for TLS measurements. Must be specified for proper server identification</li>
+                </ul>
+                
+                <h3>Optional Parameters</h3>
+                <ul>
+                    <li><strong>registration_token</strong> - Contact the Specure team to obtain a unique token for custom server naming</li>
+                </ul>
+                
+                <div class="troubleshooting-item">
+                    <h4>Unique Server Names</h4>
+                    <p>If you need a unique server name, contact the Specure team to obtain a <span class="code-inline">registration_token</span>. Without a token, the server will be registered as <span class="code-inline">AUTO_REGISTRATION</span>.</p>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2>🛰️ Server Registration Workflow</h2>
+                <p>When <span class="code-inline">server_registration = true</span>, the measurement server automatically sends a registration request to the control server using available TCP/TLS ports.</p>
+                
+                <h3>Control Server Process</h3>
+                <ol>
+                    <li><strong>IP Detection</strong> - Determines the client's IP address</li>
+                    <li><strong>Duplicate Check</strong> - Ensures no active servers exist with the same IP and hostname</li>
+                    <li><strong>Availability Verification</strong> - Confirms the server is listening on provided ports</li>
+                    <li><strong>IP Geolocation</strong> - Retrieves city and geographic coordinates using MaxMind</li>
+                </ol>
+                
+                <p>The registered server will appear on the map: <a href="https://specure.github.io/nettest/servers_map.html" target="_blank" style="color: #00d4ff;">👉 View Server Map</a></p>
+            </div>
+            
+            <div class="content-card">
+                <h2>🛑 Shutdown Procedure</h2>
+                <p>When the measurement server receives a shutdown signal:</p>
+                <ol>
+                    <li>It sends a message to the control server</li>
+                    <li>The control server identifies the server by its IP address</li>
+                    <li>The server is removed from the registry</li>
+                </ol>
+            </div>
+            
+            <div class="content-card">
+                <h2>🔄 Heartbeat / Ping</h2>
+                <p>While the measurement server is running:</p>
+                
+                <h3>Server Activity</h3>
+                <ul>
+                    <li>Sends a ping to the control server every <strong>30 seconds</strong></li>
+                    <li>Control server updates the server's <span class="code-inline">lastActive</span> field on each ping</li>
+                </ul>
+                
+                <h3>Background Cleanup</h3>
+                <ul>
+                    <li>Background job on the control server deletes servers whose <span class="code-inline">lastActive</span> timestamp is older than <strong>1 minute</strong></li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2>Best Practices</h2>
+                
+                <div class="troubleshooting-item">
+                    <h4>Hostname for TLS</h4>
+                    <p>Always specify a <span class="code-inline">hostname</span> when running TLS measurements to ensure proper certificate validation.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Unique Registration</h4>
+                    <p>Contact the Specure team for a <span class="code-inline">registration_token</span> if you need a custom server name instead of the default <span class="code-inline">AUTO_REGISTRATION</span>.</p>
+                </div>
+                
+                <div class="troubleshooting-item">
+                    <h4>Network Requirements</h4>
+                    <p>Ensure your server has proper network connectivity to reach the control server for registration and heartbeat messages.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to corresponding nav link
+            const navLink = document.querySelector(`a[href="#${sectionId}"]`);
+            if (navLink) {
+                navLink.classList.add('active');
+            }
+            
+            // Close mobile sidebar if open
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        }
+        
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+        
+        // Handle hash changes and initial load
+        function handleHashChange() {
+            const hash = window.location.hash.substring(1); // Remove #
+            if (hash) {
+                showSection(hash);
+            } else {
+                showSection('overview'); // Default to overview
+            }
+        }
+        
+        // Listen for hash changes
+        window.addEventListener('hashchange', handleHashChange);
+        
+        // Handle initial load
+        document.addEventListener('DOMContentLoaded', handleHashChange);
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>

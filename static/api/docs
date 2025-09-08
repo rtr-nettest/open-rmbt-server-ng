@@ -1,0 +1,16 @@
+#!/bin/bash
+echo "Content-Type: text/html"
+echo "Access-Control-Allow-Origin: *"
+echo "Access-Control-Allow-Methods: GET, OPTIONS"
+echo "Access-Control-Allow-Headers: Content-Type"
+echo ""
+
+if [ "$REQUEST_METHOD" = "OPTIONS" ]; then
+    exit 0
+fi
+
+if [ -f "../docs/index.html" ]; then
+    cat "../docs/index.html"
+else
+    echo "<html><body><h1>Documentation not found</h1></body></html>"
+fi

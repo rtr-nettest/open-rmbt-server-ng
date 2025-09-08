@@ -86,7 +86,10 @@ impl MioServer {
 
         let tcp_listener = TcpListener::bind(server_config.tcp_address)?;
 
+        println!("TCP Server will listen on {}", server_config.tcp_address);
+
         let tls_listener = if server_config.cert_path.is_some() && server_config.key_path.is_some() {
+            println!("TLS Server will listen on {}", server_config.tls_address);
             let tls_addr: SocketAddr = parse_listen_address(&server_config.tls_address.to_string()).unwrap();
             match TcpListener::bind(tls_addr) {
                 Ok(listener) => {

@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn StdError + Send + Sync>> {
         client::client::client_run(args, config).await?;
         return Ok(());
     } else if args[1] == "-s" {
-        println!("args: {:?}", args);
+        info!("args: {:?}", args);
         args = args.iter().skip(1).map(|s| s.clone()).collect();
 
         let mut mio_server = MioServer::new(args, config)?;
