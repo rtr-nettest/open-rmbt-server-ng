@@ -5,6 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nettest Documentation</title>
     <style>
+        :root {
+            /* Light theme colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #000000;
+            --text-secondary: #2c3e50;
+            --text-muted: #6c757d;
+            --accent-primary: #6817d0;
+            --accent-secondary: #0203ff;
+            --accent-tertiary: #7adcb3;
+            --accent-warning: #fecc05;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --sidebar-bg: linear-gradient(180deg, #6817d0 0%, #7adcb3 100%);
+            --sidebar-border: #0203ff;
+            --code-bg: #f8f9fa;
+            --code-border: #7adcb3;
+            --code-text: #000000;
+            --code-inline-bg: #fecc05;
+        }
+        
+        [data-theme="dark"] {
+            /* Dark theme colors */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --text-muted: #888;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #00d4ff;
+            --accent-tertiary: #00d4ff;
+            --accent-warning: #ff6b6b;
+            --border-color: #444;
+            --shadow-color: rgba(0,0,0,0.3);
+            --sidebar-bg: #2a2a2a;
+            --sidebar-border: #444;
+            --code-bg: #1a1a1a;
+            --code-border: #444;
+            --code-text: #00d4ff;
+            --code-inline-bg: #333;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -15,38 +57,44 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background: #1a1a1a;
-            color: #ffffff;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             display: flex;
             min-height: 100vh;
+            transition: all 0.3s ease;
         }
         
         .sidebar {
             width: 280px;
-            background: #2a2a2a;
-            border-right: 1px solid #444;
+            background: var(--sidebar-bg);
+            border-right: 3px solid var(--sidebar-border);
             padding: 20px 0;
             overflow-y: auto;
             position: fixed;
             height: 100vh;
             z-index: 1000;
+            box-shadow: 4px 0 20px var(--shadow-color);
+            transition: all 0.3s ease;
         }
         
         .sidebar-header {
             padding: 0 20px 20px;
-            border-bottom: 1px solid #444;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 20px;
         }
         
         .sidebar-header h1 {
-            color: #00d4ff;
-            font-size: 1.5rem;
-            margin-bottom: 5px;
+            color: #ffffff;
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         .sidebar-header p {
-            color: #888;
-            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            font-weight: 400;
         }
         
         .nav-menu {
@@ -59,29 +107,46 @@
         
         .nav-link {
             display: block;
-            padding: 12px 20px;
-            color: #ffffff;
+            padding: 14px 20px;
+            color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
+            font-weight: 500;
+            font-size: 0.95rem;
         }
         
         .nav-link:hover {
-            background: #333;
-            border-left-color: #00d4ff;
+            background: rgba(255, 255, 255, 0.15);
+            border-left-color: #fecc05;
+            color: #ffffff;
+            transform: translateX(4px);
         }
         
         .nav-link.active {
-            background: #333;
+            background: rgba(255, 255, 255, 0.2);
+            border-left-color: #fecc05;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        /* Dark theme specific nav-link styles */
+        [data-theme="dark"] .nav-link:hover {
+            background: rgba(0, 212, 255, 0.15);
             border-left-color: #00d4ff;
-            color: #00d4ff;
+        }
+        
+        [data-theme="dark"] .nav-link.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-left-color: #00d4ff;
         }
         
         .main-content {
             flex: 1;
             margin-left: 280px;
-            padding: 40px;
+            padding: 50px;
             max-width: calc(100% - 280px);
+            background: transparent;
         }
         
         .content-section {
@@ -97,41 +162,85 @@
         }
         
         .section-header h1 {
-            color: #00d4ff;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            color: var(--accent-primary);
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6817d0, #0203ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Light theme specific section headers */
+        .section-header h1 {
+            background: linear-gradient(135deg, #6817d0, #0203ff, #7adcb3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Dark theme specific section headers */
+        [data-theme="dark"] .section-header h1 {
+            background: linear-gradient(135deg, #00d4ff, #00d4ff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .section-header p {
-            color: #888;
-            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            font-weight: 400;
         }
         
         .content-card {
-            background: #2a2a2a;
-            border-radius: 8px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border: 1px solid #444;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 35px;
+            margin-bottom: 35px;
+            box-shadow: 0 8px 32px var(--shadow-color);
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .content-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px var(--shadow-color);
+            border-color: var(--accent-tertiary);
         }
         
         .content-card h2 {
-            color: #00d4ff;
-            margin-bottom: 20px;
-            font-size: 1.8rem;
+            color: var(--accent-primary);
+            margin-bottom: 25px;
+            font-size: 1.9rem;
+            font-weight: 700;
         }
         
         .content-card h3 {
-            color: #ffffff;
+            color: var(--accent-primary);
+            margin: 30px 0 18px 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .content-card h4 {
+            color: var(--accent-primary);
             margin: 25px 0 15px 0;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
         }
         
         .content-card p {
-            line-height: 1.6;
-            margin-bottom: 15px;
-            color: #e0e0e0;
+            line-height: 1.7;
+            margin-bottom: 18px;
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
+        .content-card strong {
+            color: var(--accent-primary);
+            font-weight: 600;
         }
         
         .content-card ul, .content-card ol {
@@ -140,29 +249,32 @@
         }
         
         .content-card li {
-            margin-bottom: 8px;
-            color: #e0e0e0;
-            line-height: 1.5;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            line-height: 1.6;
         }
         
         .code-block {
-            background: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 20px;
-            margin: 20px 0;
-            font-family: 'Courier New', monospace;
-            color: #00d4ff;
+            background: var(--code-bg);
+            border: 2px solid var(--code-border);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            color: var(--code-text);
             overflow-x: auto;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 16px var(--shadow-color);
         }
         
         .code-inline {
-            background: #333;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            color: #00d4ff;
+            background: var(--code-inline-bg);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            color: var(--text-primary);
             font-size: 0.9em;
+            font-weight: 600;
         }
         
         .feature-grid {
@@ -173,34 +285,51 @@
         }
         
         .feature-card {
-            background: #333;
-            border-radius: 8px;
-            padding: 20px;
-            border: 1px solid #444;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-tertiary);
+            box-shadow: 0 8px 25px var(--shadow-color);
         }
         
         .feature-card h4 {
-            color: #00d4ff;
-            margin-bottom: 10px;
-            font-size: 1.2rem;
+            color: var(--accent-primary);
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            font-weight: 600;
         }
         
         .feature-card p {
-            color: #e0e0e0;
-            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
         }
         
         .download-section {
-            background: linear-gradient(135deg, #00d4ff20, #ff6b6b20);
-            border: 1px solid #00d4ff;
-            border-radius: 8px;
-            padding: 25px;
-            margin: 20px 0;
+            background: linear-gradient(135deg, rgba(254, 204, 5, 0.1), rgba(122, 220, 179, 0.1));
+            border: 2px solid var(--accent-warning);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 25px 0;
+        }
+        
+        /* Dark theme specific download-section */
+        [data-theme="dark"] .download-section {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 212, 255, 0.05));
+            border: 2px solid #00d4ff;
         }
         
         .download-section h3 {
-            color: #00d4ff;
-            margin-bottom: 15px;
+            color: var(--accent-primary);
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            font-weight: 700;
         }
         
         .download-links {
@@ -229,21 +358,32 @@
         }
         
         .troubleshooting-item {
-            background: #333;
-            border-left: 4px solid #ff6b6b;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 6px 6px 0;
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent-primary);
+            padding: 20px;
+            margin: 18px 0;
+            border-radius: 0 12px 12px 0;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .troubleshooting-item:hover {
+            transform: translateX(4px);
+            border-left-color: var(--accent-warning);
+            box-shadow: 0 4px 16px var(--shadow-color);
         }
         
         .troubleshooting-item h4 {
-            color: #ff6b6b;
-            margin-bottom: 10px;
+            color: var(--accent-primary);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
         }
         
         .troubleshooting-item p {
-            color: #e0e0e0;
+            color: var(--text-secondary);
             margin-bottom: 0;
+            line-height: 1.6;
         }
         
         .mobile-menu-toggle {
@@ -258,6 +398,32 @@
             top: 20px;
             left: 20px;
             z-index: 1001;
+        }
+        
+        .theme-toggle {
+            background: linear-gradient(135deg, #6817d0, #0203ff, #7adcb3);
+            border: 2px solid #fecc05;
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            font-size: 1.2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(104, 23, 208, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(104, 23, 208, 0.4);
         }
         
         @media (max-width: 768px) {
@@ -292,6 +458,7 @@
 </head>
 <body>
     <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
     
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -389,12 +556,12 @@
             
             <div class="download-section">
                 <h3>📹 Video Tutorial</h3>
-                <p><a href="https://youtu.be/lP3tKqVywPM" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Run TCP Measurement</a></p>
+                <p><a href="https://youtu.be/lP3tKqVywPM" target="_blank" style="color: var(--accent-primary); text-decoration: none; font-weight: bold;">▶️ Watch How to Run TCP Measurement</a></p>
             </div>
             
             <div class="content-card">
                 <h2>Download</h2>
-                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: #00d4ff;">GitHub Releases</a></p>
+                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: var(--accent-primary);">GitHub Releases</a></p>
             </div>
             
             <div class="content-card">
@@ -450,12 +617,12 @@ Client: ./nettest -c &lt;server_ip&gt; -p 5006
             
             <div class="download-section">
                 <h3>📹 Video Tutorial</h3>
-                <p><a href="https://youtu.be/TmRT-syT4_s" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Run TLS Measurement</a></p>
+                <p><a href="https://youtu.be/TmRT-syT4_s" target="_blank" style="color: var(--accent-primary); text-decoration: none; font-weight: bold;">▶️ Watch How to Run TLS Measurement</a></p>
             </div>
             
             <div class="content-card">
                 <h2>Download</h2>
-                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: #00d4ff;">GitHub Releases</a></p>
+                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: var(--accent-primary);">GitHub Releases</a></p>
             </div>
             
             <div class="content-card">
@@ -558,12 +725,12 @@ tls_port = 443
             
             <div class="download-section">
                 <h3>📹 Video Tutorial</h3>
-                <p><a href="https://youtu.be/ZeGCMTTxJxg" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Run WebSocket Measurement</a></p>
+                <p><a href="https://youtu.be/ZeGCMTTxJxg" target="_blank" style="color: var(--accent-primary); text-decoration: none; font-weight: bold;">▶️ Watch How to Run WebSocket Measurement</a></p>
             </div>
             
             <div class="content-card">
                 <h2>Download</h2>
-                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: #00d4ff;">GitHub Releases</a></p>
+                <p>Download nettest from <a href="https://github.com/specure/nettest/releases" target="_blank" style="color: var(--accent-primary);">GitHub Releases</a></p>
             </div>
             
             <div class="content-card">
@@ -629,7 +796,7 @@ tls_port = 443
             
             <div class="download-section">
                 <h3>📹 Video Tutorial</h3>
-                <p><a href="https://youtu.be/DgvL_vr69fc" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Configure Threads</a></p>
+                <p><a href="https://youtu.be/DgvL_vr69fc" target="_blank" style="color: var(--accent-primary); text-decoration: none; font-weight: bold;">▶️ Watch How to Configure Threads</a></p>
             </div>
             
             <div class="content-card">
@@ -747,7 +914,7 @@ tls_port = 443
             
             <div class="download-section">
                 <h3>📹 Video Tutorial</h3>
-                <p><a href="https://youtu.be/jOLfRSP6-Pg" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: bold;">▶️ Watch How to Configure Server Registration</a></p>
+                <p><a href="https://youtu.be/jOLfRSP6-Pg" target="_blank" style="color: var(--accent-primary); text-decoration: none; font-weight: bold;">▶️ Watch How to Configure Server Registration</a></p>
             </div>
             
             <div class="content-card">
@@ -795,7 +962,7 @@ hostname = "&lt;unique hostname&gt;"
                     <li><strong>IP Geolocation</strong> - Retrieves city and geographic coordinates using MaxMind</li>
                 </ol>
                 
-                <p>The registered server will appear on the map: <a href="https://specure.github.io/nettest/servers_map.html" target="_blank" style="color: #00d4ff;">👉 View Server Map</a></p>
+                <p>The registered server will appear on the map: <a href="https://specure.github.io/nettest/servers_map.html" target="_blank" style="color: var(--accent-primary);">👉 View Server Map</a></p>
             </div>
             
             <div class="content-card">
@@ -908,6 +1075,36 @@ hostname = "&lt;unique hostname&gt;"
         window.addEventListener('resize', function() {
             if (window.innerWidth > 768) {
                 document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+        
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            const currentTheme = body.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                body.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+            } else {
+                themeToggle.textContent = '🌙';
             }
         });
     </script>
