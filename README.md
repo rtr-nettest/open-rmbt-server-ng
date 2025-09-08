@@ -6,6 +6,8 @@
 
 **Nettest** is a high-performance server and client for network speed measurement, written in Rust. The tool supports modern communication protocols and provides real-time accurate measurements with beautiful visualization.
 
+![Nettest Demo](nettest-tcp.gif)
+
 ## ✨ Key Features
 
 ### 🚀 **High Performance**
