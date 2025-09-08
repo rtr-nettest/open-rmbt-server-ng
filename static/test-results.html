@@ -279,10 +279,11 @@
         
         /* Стили для tooltip */
         .chartjs-tooltip {
-            background: rgba(0, 0, 0, 0.9) !important;
-            color: white !important;
+            background: var(--card-bg) !important;
+            color: var(--text-primary) !important;
             border-radius: 8px !important;
             padding: 12px !important;
+            border: 1px solid var(--border-color) !important;
             font-family: monospace !important;
             font-size: 13px !important;
             line-height: 1.4 !important;
@@ -950,15 +951,15 @@
                                 {
                                     label: 'Download (Gbps)',
                                     data: sortedResults.map(r => r.download),
-                                    borderColor: '#00d4ff',
-                                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                                    borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#00d4ff' : '#0203ff',
+                                    backgroundColor: document.body.getAttribute('data-theme') === 'dark' ? 'rgba(0, 212, 255, 0.1)' : 'rgba(2, 3, 255, 0.1)',
                                     fill: true
                                 },
                                 {
                                     label: 'Upload (Gbps)',
                                     data: sortedResults.map(r => r.upload),
-                                    borderColor: '#ff6b6b',
-                                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                                    borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#ff6b6b' : '#fecc05',
+                                    backgroundColor: document.body.getAttribute('data-theme') === 'dark' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(254, 204, 5, 0.1)',
                                     fill: true
                                 }
                             ]
@@ -974,16 +975,16 @@
                                 legend: {
                                     position: 'top',
                                     labels: {
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     }
                                 },
                                 tooltip: {
                                     mode: 'index',
                                     intersect: false,
                                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                                    titleColor: '#ffffff',
-                                    bodyColor: '#ffffff',
-                                    borderColor: '#00d4ff',
+                                    titleColor: 'var(--text-primary)',
+                                    bodyColor: 'var(--text-primary)',
+                                    borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#00d4ff' : '#0203ff',
                                     borderWidth: 1,
                                     callbacks: {
                                         title: function(context) {
@@ -1013,7 +1014,7 @@
                                         minRotation: 0,
                                         autoSkip: true,
                                         maxTicksLimit: 20,
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     },
                                     grid: {
                                         display: true,
@@ -1024,14 +1025,14 @@
                                     title: {
                                         display: true,
                                         text: 'Speed (Gbps)',
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     },
                                     grid: {
                                         display: true,
                                         color: '#444'
                                     },
                                     ticks: {
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     }
                                 }
                             }
@@ -1053,8 +1054,8 @@
                             datasets: [{
                                 label: 'Ping (ms)',
                                 data: sortedResults.map(r => r.ping),
-                                borderColor: '#51cf66',
-                                backgroundColor: 'rgba(81, 207, 102, 0.1)',
+                                borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#51cf66' : '#7adcb3',
+                                backgroundColor: document.body.getAttribute('data-theme') === 'dark' ? 'rgba(81, 207, 102, 0.1)' : 'rgba(122, 220, 179, 0.1)',
                                 fill: true
                             }]
                         },
@@ -1069,16 +1070,16 @@
                                 legend: {
                                     position: 'top',
                                     labels: {
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     }
                                 },
                                 tooltip: {
                                     mode: 'index',
                                     intersect: false,
                                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                                    titleColor: '#ffffff',
-                                    bodyColor: '#ffffff',
-                                    borderColor: '#00d4ff',
+                                    titleColor: 'var(--text-primary)',
+                                    bodyColor: 'var(--text-primary)',
+                                    borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#00d4ff' : '#0203ff',
                                     borderWidth: 1,
                                     callbacks: {
                                         title: function(context) {
@@ -1108,7 +1109,7 @@
                                         minRotation: 0,
                                         autoSkip: true,
                                         maxTicksLimit: 20,
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     },
                                     grid: {
                                         display: true,
@@ -1119,14 +1120,14 @@
                                     title: {
                                         display: true,
                                         text: 'Ping (ms)',
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     },
                                     grid: {
                                         display: true,
                                         color: '#444'
                                     },
                                     ticks: {
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     }
                                 }
                             }
@@ -1436,6 +1437,28 @@
         });
         
         // Theme toggle functionality
+        function updateChartColors() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            
+            // Обновляем цвета для графика скоростей
+            if (charts.speeds) {
+                const datasets = charts.speeds.data.datasets;
+                datasets[0].borderColor = isDark ? '#00d4ff' : '#0203ff';
+                datasets[0].backgroundColor = isDark ? 'rgba(0, 212, 255, 0.1)' : 'rgba(2, 3, 255, 0.1)';
+                datasets[1].borderColor = isDark ? '#ff6b6b' : '#fecc05';
+                datasets[1].backgroundColor = isDark ? 'rgba(255, 107, 107, 0.1)' : 'rgba(254, 204, 5, 0.1)';
+                charts.speeds.update();
+            }
+            
+            // Обновляем цвета для графика пинга
+            if (charts.ping) {
+                const datasets = charts.ping.data.datasets;
+                datasets[0].borderColor = isDark ? '#51cf66' : '#7adcb3';
+                datasets[0].backgroundColor = isDark ? 'rgba(81, 207, 102, 0.1)' : 'rgba(122, 220, 179, 0.1)';
+                charts.ping.update();
+            }
+        }
+
         function toggleTheme() {
             const body = document.body;
             const themeToggle = document.getElementById('themeToggle');
@@ -1450,6 +1473,9 @@
                 themeToggle.textContent = '☀️';
                 localStorage.setItem('theme', 'dark');
             }
+            
+            // Обновляем цвета графиков после смены темы
+            setTimeout(updateChartColors, 100);
         }
         
         // Load saved theme on page load
