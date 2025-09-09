@@ -74,7 +74,12 @@ impl WebSocketTlsClient {
 
         // Устанавливаем неблокирующий режим
         let tcp_stream = stream.get_mut();
-        tcp_stream.set_nodelay(true)?;
+        if let Err(e) = tcp_stream.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = tcp_stream.set_nodelay(true) {
+                debug!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
 
         // Создаем Poll для ожидания событий
         let mut poll = Poll::new()?;
