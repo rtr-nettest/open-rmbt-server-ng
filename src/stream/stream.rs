@@ -85,6 +85,7 @@ impl Stream {
     }
 
     pub fn new_rustls(addr: SocketAddr, cert_path: Option<&Path>, key_path: Option<&Path>) -> Result<Self> {
+        debug!("Creating Rustls stream {:?}", addr);
         let stream = RustlsStream::new(addr, cert_path, key_path)?;
         Ok(Self::Rustls(stream))
     }

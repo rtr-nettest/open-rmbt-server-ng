@@ -107,7 +107,7 @@ impl TestState {
             debug!("WebSocket TLS stream created");
             stream
         } else if use_tls {
-            debug!("Creating Rustls stream");
+            debug!("Creating Rustls stream {:?}", addr);
             Stream::new_rustls(addr, cert_path, key_path)?
         } else {
             if use_websocket {
