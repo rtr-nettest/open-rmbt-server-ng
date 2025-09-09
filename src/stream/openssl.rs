@@ -34,10 +34,10 @@ impl OpenSslStream {
 
         // Устанавливаем неблокирующий режим
         let tcp_stream = stream.get_mut();
-        if let Err(e) = stream.set_nodelay(true) {
+        if let Err(e) = tcp_stream.set_nodelay(true) {
             std::thread::sleep(std::time::Duration::from_millis(1000));
-            if let Err(e) = stream.set_nodelay(true) {
-                info!("Failed to set TCP_NODELAY: {}", e);
+            if let Err(e) = tcp_stream.set_nodelay(true) {
+                debug!("Failed to set TCP_NODELAY: {}", e);
             }
         }
 
