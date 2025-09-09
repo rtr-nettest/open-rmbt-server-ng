@@ -47,7 +47,12 @@ impl WebSocketClient {
     pub fn new(addr: SocketAddr) -> Result<Self> {
         debug!("Connecting to WebSocket server WS at {}", addr);
         let mut stream = TcpStream::connect(addr)?;
-        stream.set_nodelay(true)?;
+        if let Err(e) = stream.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = stream.set_nodelay(true) {
+                debug!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
 
         // Generate WebSocket key
         let key = BASE64.encode(b"dGhlIHNhbXBsZSBub25jZQ==");

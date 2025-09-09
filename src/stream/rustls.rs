@@ -26,7 +26,12 @@ impl RustlsStream {
         key_path: Option<&Path>,
     ) -> Result<Self> {
         let stream = TcpStream::connect(addr)?;
-        stream.set_nodelay(true)?;
+        if let Err(e) = stream.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = stream.set_nodelay(true) {
+                info!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
 
         let config = if let (Some(cert_path), Some(key_path)) = (cert_path, key_path) {
             let mut root_store = RootCertStore::empty();

@@ -18,7 +18,12 @@ pub struct RustlsServerStream {
 
 impl RustlsServerStream {
     pub fn new(stream: TcpStream, cert_path: String, key_path: String) -> Result<Self> {
-        stream.set_nodelay(true)?;
+        if let Err(e) = stream.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = stream.set_nodelay(true) {
+                info!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
 
         let certs = load_certs(Path::new(&cert_path))?;
         let key = load_private_key(Path::new(&key_path))?;
