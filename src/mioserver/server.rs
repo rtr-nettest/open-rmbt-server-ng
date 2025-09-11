@@ -7,7 +7,7 @@ use std::io::{self};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}};
 use std::thread;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use crate::mioserver::control_server::auto_registration::{deregister_server, register_server, start_ping_job};
 
 #[derive(Debug)]
@@ -33,7 +33,7 @@ pub struct MioServer {
 
 pub struct TestState {
     pub token: Token,
-    pub last_active: Instant,
+    pub connection_start: Instant,
     pub stream: Stream,
     pub measurement_state: ServerTestPhase,
     pub read_buffer: [u8; 1024 * 8],
@@ -237,7 +237,6 @@ impl MioServer {
     }
 
     fn check_global_queue(&mut self) -> io::Result<()> {
-        // Убираем таймаут - соединения будут ждать пока воркер их не заберет
         Ok(())
     }
 
