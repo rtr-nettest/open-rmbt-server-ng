@@ -6,6 +6,54 @@
     <title>Nettest Results - Performance History</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            /* Light theme colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #000000;
+            --text-secondary: #2c3e50;
+            --text-muted: #6c757d;
+            --accent-primary: #6817d0;
+            --accent-secondary: #0203ff;
+            --accent-tertiary: #7adcb3;
+            --accent-warning: #fecc05;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --card-bg: #f8f9fa;
+            --table-bg: #f8f9fa;
+            --table-header-bg: #e9ecef;
+            --table-border: #dee2e6;
+            --button-bg: #e9ecef;
+            --button-hover: #dee2e6;
+            --button-active: #0203ff;
+            --button-text: #000000;
+            --button-active-text: #ffffff;
+        }
+        
+        [data-theme="dark"] {
+            /* Dark theme colors */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --text-muted: #888;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #00d4ff;
+            --accent-tertiary: #00d4ff;
+            --accent-warning: #ff6b6b;
+            --border-color: #444;
+            --shadow-color: rgba(0,0,0,0.3);
+            --card-bg: #2a2a2a;
+            --table-bg: #2a2a2a;
+            --table-header-bg: #333;
+            --table-border: #444;
+            --button-bg: #333;
+            --button-hover: #555;
+            --button-active: #00d4ff;
+            --button-text: #ffffff;
+            --button-active-text: #000000;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -16,8 +64,9 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background: #1a1a1a;
-            color: #ffffff;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
         }
         
         .container {
@@ -26,10 +75,41 @@
         }
         
         h1 {
-            color: #00d4ff;
+            color: var(--accent-primary);
             text-align: center;
             margin-bottom: 30px;
             font-size: 2.5rem;
+            background: linear-gradient(135deg, #6817d0, #0203ff, #7adcb3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            text-shadow: 0 0 30px rgba(104, 23, 208, 0.3);
+        }
+        
+        /* Dark theme specific h1 */
+        [data-theme="dark"] h1 {
+            background: linear-gradient(135deg, #00d4ff, #00d4ff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+        
+        /* Dark theme specific connection-tab */
+        [data-theme="dark"] .connection-tab.active {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #000000;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+        
+        [data-theme="dark"] .connection-tab.active:hover {
+            background: linear-gradient(135deg, #00e6ff 0%, #00aadd 100%);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        [data-theme="dark"] .connection-tab:hover {
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
         }
         
         .connection-tabs {
@@ -43,20 +123,47 @@
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
-            background: #333;
-            color: #fff;
+            background: var(--button-bg);
+            color: var(--button-text);
             cursor: pointer;
             font-size: 16px;
+            font-weight: 600;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .connection-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .connection-tab:hover::before {
+            left: 100%;
         }
         
         .connection-tab:hover {
-            background: #555;
+            background: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(104, 23, 208, 0.3);
         }
         
         .connection-tab.active {
-            background: #00d4ff;
-            color: #000;
+            background: linear-gradient(135deg, #6817d0 0%, #0203ff 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(104, 23, 208, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .connection-tab.active:hover {
+            background: linear-gradient(135deg, #5a15b8 0%, #0102e6 100%);
+            box-shadow: 0 6px 20px rgba(104, 23, 208, 0.5);
         }
         
         .charts-container {
@@ -64,12 +171,12 @@
         }
         
         .chart-card {
-            background: #2a2a2a;
+            background: var(--card-bg);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border: 1px solid #444;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            border: 1px solid var(--border-color);
         }
         
         .chart-card.full-width {
@@ -78,7 +185,13 @@
         
         .chart-card h3 {
             margin: 0 0 20px 0;
-            color: #00d4ff;
+            color: var(--accent-primary);
+            font-size: 18px;
+        }
+        
+        h3 {
+            color: var(--accent-primary);
+            margin: 0 0 20px 0;
             font-size: 18px;
         }
         
@@ -99,41 +212,41 @@
         #resultsTable {
             width: 100%;
             border-collapse: collapse;
-            background: #2a2a2a;
+            background: var(--table-bg);
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border: 1px solid #444;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            border: 1px solid var(--table-border);
         }
         
         #resultsTable th,
         #resultsTable td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #444;
+            border-bottom: 1px solid var(--table-border);
         }
         
         #resultsTable th {
-            background: #333;
+            background: var(--table-header-bg);
             font-weight: 600;
-            color: #00d4ff;
+            color: var(--accent-primary);
         }
         
         #resultsTable td {
-            color: #ffffff;
+            color: var(--text-primary);
         }
         
         #resultsTable tr:hover {
-            background: #3a3a3a;
+            background: var(--bg-secondary);
         }
         
         .commit-hash {
             font-family: monospace;
-            background: #444;
+            background: var(--bg-secondary);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 12px;
-            color: #00d4ff;
+            color: var(--accent-primary);
         }
         
         .commit-message {
@@ -142,11 +255,11 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             font-size: 14px;
-            color: #e0e0e0;
+            color: var(--text-secondary);
         }
         
         .error {
-            color: #ff6b6b;
+            color: var(--accent-warning);
             text-align: center;
             padding: 20px;
             font-weight: bold;
@@ -166,10 +279,11 @@
         
         /* Стили для tooltip */
         .chartjs-tooltip {
-            background: rgba(0, 0, 0, 0.9) !important;
-            color: white !important;
+            background: var(--card-bg) !important;
+            color: var(--text-primary) !important;
             border-radius: 8px !important;
             padding: 12px !important;
+            border: 1px solid var(--border-color) !important;
             font-family: monospace !important;
             font-size: 13px !important;
             line-height: 1.4 !important;
@@ -184,14 +298,14 @@
             text-align: center;
             padding: 40px;
             font-size: 1.2rem;
-            color: #00d4ff;
+            color: var(--accent-primary);
         }
 
         .error {
             text-align: center;
             padding: 40px;
             font-size: 1.2rem;
-            color: #ff6b6b;
+            color: var(--accent-warning);
             background: rgba(255, 107, 107, 0.1);
             border-radius: 10px;
         }
@@ -207,10 +321,10 @@
             position: absolute;
             top: 20px;
             right: 0px;
-            background: #2a2a2a;
-            border: 1px solid #444;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px var(--shadow-color);
             width: 160px;
             max-width: 160px;
             min-width: 160px;
@@ -222,13 +336,13 @@
             align-items: center;
             padding: 12px 16px;
             cursor: pointer;
-            background: #333;
+            background: var(--table-header-bg);
             border-radius: 8px 8px 0 0;
             transition: background-color 0.3s ease;
         }
         
         .status-header:hover {
-            background: #444;
+            background: var(--button-hover);
         }
         
         .status-icon {
@@ -238,12 +352,12 @@
         
         .status-text {
             flex: 1;
-            color: #00d4ff;
+            color: var(--accent-primary);
             font-weight: 600;
         }
         
         .status-toggle {
-            color: #ffffff;
+            color: var(--text-primary);
             transition: transform 0.3s ease;
         }
         
@@ -255,7 +369,7 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease;
-            background: #2a2a2a;
+            background: var(--card-bg);
             border-radius: 0 0 8px 8px;
             width: 400px;
             max-width: 400px;
@@ -267,7 +381,7 @@
         
         .status-content > div {
             padding: 16px;
-            border-top: 1px solid #444;
+            border-top: 1px solid var(--border-color);
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
@@ -303,14 +417,14 @@
         .measurement-details {
             margin-top: 15px;
             padding: 15px;
-            background: #333;
+            background: var(--table-header-bg);
             border-radius: 6px;
-            border: 1px solid #444;
+            border: 1px solid var(--border-color);
         }
         
         .measurement-details h4 {
             margin: 0 0 15px 0;
-            color: #00d4ff;
+            color: var(--accent-primary);
             font-size: 14px;
             text-align: center;
         }
@@ -321,9 +435,9 @@
             justify-content: space-between;
             margin-bottom: 8px;
             padding: 8px 12px;
-            background: #2a2a2a;
+            background: var(--card-bg);
             border-radius: 4px;
-            border: 1px solid #444;
+            border: 1px solid var(--border-color);
         }
         
         .measurement-row:last-child {
@@ -332,13 +446,13 @@
         
         .measurement-row .connection-type {
             font-weight: bold;
-            color: #00d4ff;
+            color: var(--accent-primary);
             min-width: 40px;
         }
         
         .measurement-row .measurement-separator {
             margin: 0 8px;
-            color: #666;
+            color: var(--text-muted);
             font-weight: bold;
         }
         
@@ -346,7 +460,7 @@
         .measurement-row .download-value,
         .measurement-row .upload-value {
             font-family: monospace;
-            color: #00d4ff;
+            color: var(--accent-primary);
             min-width: 50px;
             text-align: center;
         }
@@ -354,17 +468,56 @@
         .measurement-row.missing .ping-value,
         .measurement-row.missing .download-value,
         .measurement-row.missing .upload-value {
-            color: #ff6b6b;
+            color: var(--accent-warning);
         }
         
         .measurement-row.missing {
             background: rgba(255, 107, 107, 0.1);
-            border-color: #ff6b6b;
+            border-color: var(--accent-warning);
+        }
+        
+        .theme-toggle {
+            background: linear-gradient(135deg, #6817d0, #0203ff, #7adcb3);
+            border: 2px solid #fecc05;
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            font-size: 1.2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(104, 23, 208, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(104, 23, 208, 0.4);
+        }
+        
+        /* Dark theme specific theme toggle */
+        [data-theme="dark"] .theme-toggle {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 2px solid #00d4ff;
+            color: #00d4ff;
+            box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+        }
+        
+        [data-theme="dark"] .theme-toggle:hover {
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
         <div class="header">
             <h1>🚀 Nettest Performance History</h1>
             <p>Track performance changes from API measurements</p>
@@ -798,15 +951,15 @@
                                 {
                                     label: 'Download (Gbps)',
                                     data: sortedResults.map(r => r.download),
-                                    borderColor: '#00d4ff',
-                                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                                    borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#00d4ff' : '#0203ff',
+                                    backgroundColor: document.body.getAttribute('data-theme') === 'dark' ? 'rgba(0, 212, 255, 0.1)' : 'rgba(2, 3, 255, 0.1)',
                                     fill: true
                                 },
                                 {
                                     label: 'Upload (Gbps)',
                                     data: sortedResults.map(r => r.upload),
-                                    borderColor: '#ff6b6b',
-                                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                                    borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#ff6b6b' : '#fecc05',
+                                    backgroundColor: document.body.getAttribute('data-theme') === 'dark' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(254, 204, 5, 0.1)',
                                     fill: true
                                 }
                             ]
@@ -822,16 +975,16 @@
                                 legend: {
                                     position: 'top',
                                     labels: {
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     }
                                 },
                                 tooltip: {
                                     mode: 'index',
                                     intersect: false,
                                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                                    titleColor: '#ffffff',
-                                    bodyColor: '#ffffff',
-                                    borderColor: '#00d4ff',
+                                    titleColor: 'var(--text-primary)',
+                                    bodyColor: 'var(--text-primary)',
+                                    borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#00d4ff' : '#0203ff',
                                     borderWidth: 1,
                                     callbacks: {
                                         title: function(context) {
@@ -861,7 +1014,7 @@
                                         minRotation: 0,
                                         autoSkip: true,
                                         maxTicksLimit: 20,
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     },
                                     grid: {
                                         display: true,
@@ -872,14 +1025,14 @@
                                     title: {
                                         display: true,
                                         text: 'Speed (Gbps)',
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     },
                                     grid: {
                                         display: true,
                                         color: '#444'
                                     },
                                     ticks: {
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     }
                                 }
                             }
@@ -901,8 +1054,8 @@
                             datasets: [{
                                 label: 'Ping (ms)',
                                 data: sortedResults.map(r => r.ping),
-                                borderColor: '#51cf66',
-                                backgroundColor: 'rgba(81, 207, 102, 0.1)',
+                                borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#51cf66' : '#7adcb3',
+                                backgroundColor: document.body.getAttribute('data-theme') === 'dark' ? 'rgba(81, 207, 102, 0.1)' : 'rgba(122, 220, 179, 0.1)',
                                 fill: true
                             }]
                         },
@@ -917,16 +1070,16 @@
                                 legend: {
                                     position: 'top',
                                     labels: {
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     }
                                 },
                                 tooltip: {
                                     mode: 'index',
                                     intersect: false,
                                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                                    titleColor: '#ffffff',
-                                    bodyColor: '#ffffff',
-                                    borderColor: '#00d4ff',
+                                    titleColor: 'var(--text-primary)',
+                                    bodyColor: 'var(--text-primary)',
+                                    borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#00d4ff' : '#0203ff',
                                     borderWidth: 1,
                                     callbacks: {
                                         title: function(context) {
@@ -956,7 +1109,7 @@
                                         minRotation: 0,
                                         autoSkip: true,
                                         maxTicksLimit: 20,
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     },
                                     grid: {
                                         display: true,
@@ -967,14 +1120,14 @@
                                     title: {
                                         display: true,
                                         text: 'Ping (ms)',
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     },
                                     grid: {
                                         display: true,
                                         color: '#444'
                                     },
                                     ticks: {
-                                        color: '#ffffff'
+                                        color: 'var(--text-primary)'
                                     }
                                 }
                             }
@@ -1280,6 +1433,61 @@
                 statusHeader.addEventListener('click', () => {
                     statusIndicator.classList.toggle('expanded');
                 });
+            }
+        });
+        
+        // Theme toggle functionality
+        function updateChartColors() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            
+            // Обновляем цвета для графика скоростей
+            if (charts.speeds) {
+                const datasets = charts.speeds.data.datasets;
+                datasets[0].borderColor = isDark ? '#00d4ff' : '#0203ff';
+                datasets[0].backgroundColor = isDark ? 'rgba(0, 212, 255, 0.1)' : 'rgba(2, 3, 255, 0.1)';
+                datasets[1].borderColor = isDark ? '#ff6b6b' : '#fecc05';
+                datasets[1].backgroundColor = isDark ? 'rgba(255, 107, 107, 0.1)' : 'rgba(254, 204, 5, 0.1)';
+                charts.speeds.update();
+            }
+            
+            // Обновляем цвета для графика пинга
+            if (charts.ping) {
+                const datasets = charts.ping.data.datasets;
+                datasets[0].borderColor = isDark ? '#51cf66' : '#7adcb3';
+                datasets[0].backgroundColor = isDark ? 'rgba(81, 207, 102, 0.1)' : 'rgba(122, 220, 179, 0.1)';
+                charts.ping.update();
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            const currentTheme = body.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                body.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+            
+            // Обновляем цвета графиков после смены темы
+            setTimeout(updateChartColors, 100);
+        }
+        
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+            } else {
+                themeToggle.textContent = '🌙';
             }
         });
     </script>
