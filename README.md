@@ -6,6 +6,8 @@
 
 **Nettest** is a high-performance server and client for network speed measurement, written in Rust. The tool supports modern communication protocols and provides real-time accurate measurements with beautiful visualization.
 
+📚 **Complete Documentation**: [https://specure.github.io/nettest/docs](https://specure.github.io/nettest/docs)
+
 ## ✨ Key Features
 
 ### 🚀 **High Performance**
@@ -28,7 +30,7 @@
 - Configurable ports and addresses
 - SSL/TLS certificate support
 
-## 🗺️ Interactive Measurement Interface
+## 🗺️ Interactive Servers Map
 
 <div style="text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 204, 0.1) 100%); border: 2px solid rgba(0, 212, 255, 0.3); border-radius: 16px; position: relative; overflow: hidden;">
   <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('https://specure.github.io/nettest/map-background.png') center/cover; opacity: 0.1;"></div>
