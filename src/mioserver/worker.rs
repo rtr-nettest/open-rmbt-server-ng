@@ -172,6 +172,7 @@ impl Worker {
                         {
                             let mut counts = self.worker_connection_counts.lock().unwrap();
                             counts[self.id] -= 1;
+                            self.connections.remove(&token);
                             debug!("Worker {}: connection count decreased to {} (after greeting error)", 
                                    self.id, counts[self.id]);
                         }
@@ -377,7 +378,7 @@ impl Worker {
     fn check_global_queue_timeout(&self) {
         let mut global_queue = self.global_queue.lock().unwrap();
         let now = Instant::now();
-        let timeout_duration = Duration::from_secs(30); // 30 seconds timeout for worker
+        let timeout_duration = Duration::from_secs(60); // 60 seconds timeout for worker
         
         let initial_size = global_queue.len();
         global_queue.retain(|(_, timestamp)| {
