@@ -21,7 +21,7 @@ impl OpenSslStream {
         ctx.set_options(SslOptions::NO_COMPRESSION);
         ctx.set_ciphersuites("TLS_AES_128_GCM_SHA256")?;
 
-        // Устанавливаем версии протокола
+        // Set protocol versions
         ctx.set_max_proto_version(Some(openssl::ssl::SslVersion::TLS1_3))?;
         ctx.set_min_proto_version(Some(openssl::ssl::SslVersion::TLS1_2))?;
 
@@ -32,20 +32,20 @@ impl OpenSslStream {
         let mut stream = SslStream::new(ssl, stream)?;
         debug!("SSL stream created");
 
-        // Устанавливаем неблокирующий режим
+        // Set non-blocking mode
         let tcp_stream = stream.get_mut();
-        if let Err(e) = tcp_stream.set_nodelay(true) {
+        if let Err(_) = tcp_stream.set_nodelay(true) {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             if let Err(e) = tcp_stream.set_nodelay(true) {
                 debug!("Failed to set TCP_NODELAY: {}", e);
             }
         }
 
-        // Создаем Poll для ожидания событий
+        // Create Poll for waiting events
         let mut poll = Poll::new()?;
         let mut events = mio::Events::with_capacity(128);
 
-        // Регистрируем сокет для чтения и записи
+        // Register socket for reading and writing
         poll.registry().reregister(
             stream.get_mut(),
             Token(0),
@@ -53,14 +53,14 @@ impl OpenSslStream {
         )?;
         debug!("Registered stream");
 
-        // Ждем, пока TCP соединение будет установлено
+        // Wait until TCP connection is established
         loop {
             poll.poll(&mut events, None)?;
             let mut connection_ready = false;
 
             for event in events.iter() {
                 if event.is_writable() {
-                    // Проверяем, что соединение действительно установлено
+                    // Check that connection is actually established
                     if let Err(e) = stream.get_ref().peer_addr() {
                         if e.kind() == io::ErrorKind::NotConnected {
                             debug!("TCP connection not ready yet, waiting...");
@@ -77,7 +77,7 @@ impl OpenSslStream {
             }
         }
 
-        // Теперь можно начинать TLS handshake
+        // Now can start TLS handshake
         loop {
             match stream.connect() {
                 Ok(_) => {
@@ -85,7 +85,7 @@ impl OpenSslStream {
                     break;
                 }
                 Err(e) => {
-                    // Проверяем на вложенную ошибку WouldBlock
+                    // Check for nested WouldBlock error
                     if let Some(io_error) = e.io_error() {
                         if io_error.kind() == io::ErrorKind::WouldBlock {
                             debug!("Socket not ready, waiting...");

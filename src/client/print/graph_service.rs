@@ -46,7 +46,7 @@ impl GraphService {
 
         // let upload_speed = calculate_upload_speed(&state_refs);
 
-        // Отрисовываем графики используя GraphService
+        // Render graphs using GraphService
         if !download_results.is_empty()  {
             GraphService::print_download(&download_results);
         }
@@ -127,13 +127,13 @@ impl GraphService {
         min_time: u64,
         max_time: u64,
     ) -> Vec<(f64, f64, u64)> {
-        let step_ns = 200_000_000u64; // 0.2 сек в наносекундах
+        let step_ns = 200_000_000u64; // 0.2 sec in nanoseconds
         let duration_ns = max_time - min_time;
         let steps = (duration_ns as f64 / step_ns as f64).ceil() as usize;
         let mut speed_data = Vec::new();
 
         for i in 0..=steps {
-            let t = i as f64 * 0.2; // Время отображения с 0 секунд
+            let t = i as f64 * 0.2; // Display time starting from 0 seconds
             let target_time = min_time + (i as u64 * step_ns);
             let mut total_bytes = 0.0f64;
 
@@ -142,7 +142,7 @@ impl GraphService {
                     continue;
                 }
 
-                // Интерполируем данные в текущий момент времени
+                // Interpolate data at current time
                 let bytes_at_target = Self::interpolate_bytes_at_time(&result.measurements, target_time);
                 total_bytes += bytes_at_target;
             }

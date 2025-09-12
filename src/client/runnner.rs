@@ -113,11 +113,11 @@ pub async fn run_threads(
                 let speed =
                     calculate_download_speed_from_stats_silent(&stats_guard.download_measurements);
 
-                // Сохраняем download скорость для последующего использования
-                *download_speed_clone.lock().unwrap() = Some(speed.2); // speed.1 - это Gbps
+                // Save download speed for later use
+                *download_speed_clone.lock().unwrap() = Some(speed.2); // speed.1 is Gbps
 
                 if config.raw_output {
-                    print!("/{:.2}", speed.1); // speed.1 - это Gbps
+                    print!("/{:.2}", speed.1); // speed.1 is Gbps
                 } else {
                     print_test_result("Download Test", "Completed", Some(speed));
                 }
@@ -145,11 +145,11 @@ pub async fn run_threads(
                 let speed =
                     calculate_upload_speed_from_stats_silent(&stats_guard.upload_measurements);
 
-                // Сохраняем upload скорость для последующего использования
-                *upload_speed_clone.lock().unwrap() = Some(speed.2); // speed.1 - это Gbps
+                // Save upload speed for later use
+                *upload_speed_clone.lock().unwrap() = Some(speed.2); // speed.1 is Gbps
 
                 if config.raw_output {
-                    println!("/{:.2}", speed.1); // speed.1 - это Gbps, println! для перевода строки
+                    println!("/{:.2}", speed.1); // speed.1 is Gbps, println! for line break
                 } else {
                     print_test_result("Upload Test", "Completed", Some(speed));
                 }
@@ -206,11 +206,11 @@ pub async fn run_threads(
         println!("Failed threads: {}", config.thread_count - state_refs.len());
     }
 
-    // Сохраняем результаты если включена опция -save
+    // Save results if -save option is enabled
     if config.save_results {
         let mut measurement_saver = MeasurementSaver::new(&config_clone);
 
-        // Получаем все сохраненные значения
+        // Get all saved values
         let ping_median_value = *ping_median.lock().unwrap();
         let download_speed_value = *download_speed.lock().unwrap();
         let upload_speed_value = *upload_speed.lock().unwrap();

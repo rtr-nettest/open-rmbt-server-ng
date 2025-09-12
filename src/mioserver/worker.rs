@@ -13,7 +13,7 @@ use crate::mioserver::handlers::basic_handler::{
     handle_client_readable_data, handle_client_writable_data,
 };
 
-// Константа для таймаута обработки соединения
+// Connection processing timeout constant
 const CONNECTION_PROCESSING_TIMEOUT: u64 = 60; 
 use crate::mioserver::server::{ConnectionType, ServerConfig, TestState};
 use crate::mioserver::ServerTestPhase;
@@ -31,7 +31,7 @@ struct Worker {
     connections: HashMap<Token, TestState>,
     events: Events,
     worker_connection_counts: Arc<Mutex<Vec<usize>>>,
-    global_queue: Arc<Mutex<VecDeque<(ConnectionType, Instant)>>>, // Общая очередь
+    global_queue: Arc<Mutex<VecDeque<(ConnectionType, Instant)>>>, // Global queue
     server_config: ServerConfig,
     next_token: usize,
     
@@ -127,7 +127,7 @@ impl Worker {
                 let token = Token(self.next_token);
                 self.next_token += 1;
 
-                // Регистрируем новое соединение
+                // Register new connection
                 if let Err(e) = stream.register(&self.poll, token, Interest::READABLE | Interest::WRITABLE) {
                     info!("Worker {}: Failed to register connection: {}", self.id, e);
                     continue;
@@ -139,7 +139,7 @@ impl Worker {
                             token,
                             TestState {
                                 token,
-                                connection_start: Instant::now(), // Время начала обработки соединения
+                                connection_start: Instant::now(), // Connection processing start time
                                 // stream: Stream::new_rustls_server(stream, None, None).unwrap(),
                                 stream: stream,
                                 measurement_state: ServerTestPhase::GreetingSendVersion,
@@ -308,7 +308,7 @@ impl Worker {
         let start_time = std::time::Instant::now();
 
         while !loop_flag {
-            // Проверяем таймаут
+            // Check timeout
             if start_time.elapsed() > timeout {
                 debug!("Worker {}: handshake timeout after {:?}", self.id, timeout);
                 stream.close().unwrap();
@@ -318,7 +318,7 @@ impl Worker {
 
             stream.reregister(&self.poll, token, Interest::WRITABLE | Interest::READABLE)?;
 
-            // Используем таймаут для poll
+            // Use timeout for poll
             let poll_timeout = timeout - start_time.elapsed();
             self.poll.poll(&mut self.events, Some(poll_timeout))?;
             for event in self.events.iter() {
@@ -377,7 +377,7 @@ impl Worker {
     fn check_global_queue_timeout(&self) {
         let mut global_queue = self.global_queue.lock().unwrap();
         let now = Instant::now();
-        let timeout_duration = Duration::from_secs(30); // 30 секунд таймаут для воркера
+        let timeout_duration = Duration::from_secs(30); // 30 seconds timeout for worker
         
         let initial_size = global_queue.len();
         global_queue.retain(|(_, timestamp)| {

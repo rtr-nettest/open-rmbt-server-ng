@@ -7,13 +7,13 @@ use std::io::{self};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Instant};
 use crate::mioserver::control_server::auto_registration::{deregister_server, register_server, start_ping_job};
 
 #[derive(Debug)]
 pub enum ConnectionType {
     Tcp(TcpStream, SocketAddr),
-    Tls(TcpStream, SocketAddr), // Пока что тот же TcpStream, но с флагом TLS
+    Tls(TcpStream, SocketAddr), // Same TcpStream but with TLS flag
 }
 
 use crate::config::FileConfig;
@@ -26,7 +26,7 @@ pub struct MioServer {
     tcp_listener: TcpListener,
     tls_listener: Option<TcpListener>,
     _worker_threads: Vec<WorkerThread>,
-    global_queue: Arc<Mutex<VecDeque<(ConnectionType, Instant)>>>, // Общая очередь с временными метками
+    global_queue: Arc<Mutex<VecDeque<(ConnectionType, Instant)>>>, // Global queue with timestamps
     server_config: ServerConfig,
     shutdown_signal: Arc<AtomicBool>,
 }
@@ -163,13 +163,13 @@ impl MioServer {
         }
 
         loop {
-            // Проверяем сигнал завершения
+            // Check shutdown signal
             if self.shutdown_signal.load(Ordering::Relaxed) {
                 info!("Shutdown signal received, stopping server...");
                 break;
             }
 
-            // Принимаем TCP соединения
+            // Accept TCP connections
             match self.tcp_listener.accept() {
                 Ok((stream, _addr)) => {
                     if let Err(e) = stream.set_nodelay(true) {
@@ -178,7 +178,7 @@ impl MioServer {
                     self.handle_connection(stream, false, _addr)?;
                 }
                 Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                    // Продолжаем
+                    // Continue
                 }
                 Err(e) => {
                     debug!("Error accepting TCP connection: {}", e);
@@ -186,7 +186,7 @@ impl MioServer {
                 }
             }
 
-            // Принимаем TLS соединения если есть listener
+            // Accept TLS connections if listener exists
             if let Some(ref mut tls_listener) = self.tls_listener {
                 match tls_listener.accept() {
                     Ok((stream, _addr)) => {
@@ -196,7 +196,7 @@ impl MioServer {
                         self.handle_connection(stream, true, _addr)?;
                     }
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                        // Продолжаем
+                        // Continue
                     }
                     Err(e) => {
                         debug!("Error accepting TLS connection: {}", e);
@@ -205,7 +205,7 @@ impl MioServer {
                 }
             }
 
-            // Проверяем общую очередь на устаревшие соединения
+            // Check global queue for stale connections
             self.check_global_queue()?;
 
             thread::sleep(std::time::Duration::from_millis(10));
@@ -247,7 +247,7 @@ impl MioServer {
             ConnectionType::Tcp(stream, client_addr)
         };
 
-        // Добавляем соединение в глобальную очередь
+        // Add connection to global queue
         let mut global_queue = self.global_queue.lock().unwrap();
         global_queue.push_back((connection, Instant::now()));
 

@@ -142,16 +142,16 @@ pub async fn start_ping_job(config: ServerConfig, shutdown_signal: Arc<AtomicBoo
     
     loop {
         info!("Ping job loop");
-        // Проверяем сигнал завершения
+        // Check shutdown signal
         if shutdown_signal.load(Ordering::Relaxed) {
             info!("Ping job received shutdown signal, stopping...");
             break;
         }
         
-        // Ждем следующего интервала
+        // Wait for next interval
         interval_timer.tick().await;
         
-        // Отправляем ping
+        // Send ping
         if let Err(e) = ping_server(&config).await {
             info!("Ping job error: {}", e);
         }

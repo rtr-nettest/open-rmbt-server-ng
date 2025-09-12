@@ -31,8 +31,8 @@ impl UserPrivileges {
 
     #[cfg(windows)]
     pub fn new(username: &str) -> io::Result<Self> {
-        // На Windows используем фиксированные значения
-        // В реальном приложении здесь можно использовать Windows API
+        // On Windows use fixed values
+        // In real application Windows API can be used here
         Ok(Self {
             uid: 1000, // Default user ID
             gid: 1000, // Default group ID
@@ -62,8 +62,8 @@ impl UserPrivileges {
 
     #[cfg(windows)]
     pub fn drop_privileges(&self) -> io::Result<()> {
-        // На Windows drop privileges не поддерживается в таком виде
-        // Просто возвращаем Ok
+        // On Windows drop privileges is not supported in this form
+        // Just return Ok
         Ok(())
     }
 
@@ -82,8 +82,8 @@ impl UserPrivileges {
 
     #[cfg(windows)]
     pub fn check_root() -> io::Result<()> {
-        // На Windows проверяем права администратора
-        // Для простоты всегда возвращаем Ok
+        // On Windows check administrator rights
+        // For simplicity always return Ok
         Ok(())
     }
 }

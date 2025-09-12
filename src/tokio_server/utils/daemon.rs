@@ -10,7 +10,7 @@ use log::info;
 
 #[cfg(unix)]
 pub fn daemonize() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    // Сохраняем текущую директорию
+    // Save current directory
     let current_dir = env::current_dir()?;
     info!("Current directory before daemonize: {}", current_dir.display());
 

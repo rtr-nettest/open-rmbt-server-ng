@@ -47,7 +47,7 @@ impl WebSocketClient {
     pub fn new(addr: SocketAddr) -> Result<Self> {
         debug!("Connecting to WebSocket server WS at {}", addr);
         let mut stream = TcpStream::connect(addr)?;
-        if let Err(e) = stream.set_nodelay(true) {
+        if let Err(_) = stream.set_nodelay(true) {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             if let Err(e) = stream.set_nodelay(true) {
                 debug!("Failed to set TCP_NODELAY: {}", e);
@@ -71,11 +71,11 @@ impl WebSocketClient {
             addr, key
         );
 
-        // Создаем Poll для ожидания событий
+        // Create Poll for waiting events
         let mut poll = Poll::new()?;
         let mut events = mio::Events::with_capacity(128);
 
-        // Регистрируем сокет для чтения и записи
+        // Register socket for reading and writing
         poll.registry()
             .register(&mut stream, Token(0), Interest::WRITABLE)?;
 

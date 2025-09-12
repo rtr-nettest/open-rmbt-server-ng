@@ -121,7 +121,7 @@ impl Stream {
 
     pub fn new_openssl(addr: SocketAddr) -> Result<Self> {
         let stream1 = TcpStream::connect(addr)?;
-        if let Err(e) = stream1.set_nodelay(true) {
+        if let Err(_) = stream1.set_nodelay(true) {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             if let Err(e) = stream1.set_nodelay(true) {
                 debug!("Failed to set TCP_NODELAY: {}", e);
@@ -134,7 +134,7 @@ impl Stream {
 
     pub fn new_websocket_tls(addr: SocketAddr) -> Result<Self> {
         let stream1 = TcpStream::connect(addr)?;
-        if let Err(e) = stream1.set_nodelay(true) {
+        if let Err(_) = stream1.set_nodelay(true) {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             if let Err(e) = stream1.set_nodelay(true) {
                 debug!("Failed to set TCP_NODELAY: {}", e);

@@ -31,12 +31,12 @@ pub struct MeasurementSaver {
     connection_type: ConnectionType,
     threads_number: u32,
     git_hash: Option<String>,
-    client_config: ClientConfig,  // Добавляем конфигурацию клиента
+    client_config: ClientConfig,  // Add client configuration
 }
 
 impl MeasurementSaver {
     pub fn new(client_config: &ClientConfig) -> Self {
-        // Определяем тип соединения на основе конфигурации
+        // Determine connection type based on configuration
         let connection_type = if client_config.use_websocket {
             if client_config.use_tls {
                 ConnectionType::WSS
@@ -75,15 +75,15 @@ impl MeasurementSaver {
     }
 
     fn ensure_client_uuid(&mut self) -> Result<String, Box<dyn std::error::Error>> {
-        // Если client_uuid уже есть, возвращаем его
+        // If client_uuid already exists, return it
         if let Some(uuid) = &self.client_uuid {
             return Ok(uuid.clone());
         }
         
-        // Генерируем новый UUID
+        // Generate new UUID
         let new_uuid = Uuid::new_v4().to_string();
         
-        // Определяем путь к конфигурационному файлу
+        // Determine config file path
         let config_path = if cfg!(target_os = "macos") {
             let home_dir = env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
             PathBuf::from(format!("{}/.config/nettest.conf", home_dir))
@@ -91,32 +91,32 @@ impl MeasurementSaver {
             PathBuf::from("/etc/nettest.conf")
         };
         
-        // Читаем текущий контент файла
+        // Read current file content
         let mut content = if config_path.exists() {
             fs::read_to_string(&config_path)?
         } else {
             String::new()
         };
         
-        // Проверяем, есть ли уже client_uuid (независимо от того, закомментирован он или нет)
+        // Check if client_uuid already exists (regardless of whether it's commented out)
         let has_uuid = content.lines().any(|line| {
             let line = line.trim();
             line.starts_with("client_uuid") && !line.starts_with("#")
         });
         
-        // Если client_uuid нет или он закомментирован, добавляем его
+        // If client_uuid doesn't exist or is commented out, add it
         if !has_uuid {
             if !content.is_empty() && !content.ends_with('\n') {
                 content.push('\n');
             }
             content.push_str(&format!("client_uuid=\"{}\"\n", new_uuid));
             
-            // Записываем обновленный контент
+            // Write updated content
             fs::write(&config_path, content)?;
             println!("Generated and saved new client UUID: {}", new_uuid);
         }
         
-        // Обновляем внутреннее состояние
+        // Update internal state
         self.client_uuid = Some(new_uuid.clone());
         
         Ok(new_uuid)
@@ -129,26 +129,26 @@ impl MeasurementSaver {
         upload_speed_gbps: Option<f64>,
         signed_data: Vec<Option<String>>,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        // Обеспечиваем наличие client_uuid
+        // Ensure client_uuid exists
         let client_uuid = self.ensure_client_uuid()?;
 
-        // Конвертируем скорости из Gbps в сотые доли Mbps (например: 57.3 Gbps -> 5730)
+        // Convert speeds from Gbps to hundredths of Mbps (e.g.: 57.3 Gbps -> 5730)
         let download_speed = download_speed_gbps.map(|speed| (speed * 100.0) as i32);
         let upload_speed = upload_speed_gbps.map(|speed| (speed * 100.0) as i32);
 
-        // Сохраняем ping в наносекундах для большей точности
+        // Save ping in nanoseconds for greater precision
         let ping_median_ns = ping_median;
 
-        // Генерируем openTestUuid - используем GITHUB_SHA если есть, иначе генерируем
+        // Generate openTestUuid - use GITHUB_SHA if available, otherwise generate
         let open_test_uuid = Uuid::new_v4().to_string();
 
-        // Получаем текущее время
+        // Get current time
         let current_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
 
-        // Формируем данные для отправки
+        // Form data for sending
         let mut measurement_data = json!({
             "openTestUuid": open_test_uuid,
             "clientUuid": client_uuid,
@@ -163,7 +163,7 @@ impl MeasurementSaver {
             "measurementServerIp": self.resolve_server_ip(),
         });
 
-        // Добавляем commitHash только если есть git_hash в конфигурации
+        // Add commitHash only if git_hash exists in configuration
         if let Some(git_hash) = &self.git_hash {
             measurement_data["commitHash"] = json!(git_hash);
         } else if let Ok(commit_hash) = std::env::var("GITHUB_SHA") {
@@ -174,7 +174,7 @@ impl MeasurementSaver {
 
         info!("Saving measurement: {:?}", measurement_data);
 
-        // Отправляем POST запрос
+        // Send POST request
         let client = reqwest::Client::new();
         let response = client
             .post(&format!("{}/measurement/save", self.client_config.control_server))

@@ -14,7 +14,7 @@ pub struct TokenValidator {
 }
 
 impl TokenValidator {
-    /// Создание валидатора с произвольными ключами
+    /// Create validator with arbitrary keys
     pub fn new(secret_keys: Vec<String>, secret_keys_labels: Vec<String>) -> Self {
         Self {
             secret_keys,
@@ -22,9 +22,9 @@ impl TokenValidator {
         }
     }
 
-    /// Проверка токена
+    /// Validate token
     pub async fn validate(&self, _token_uuid: &str, _start_time_str: &str, _hmac: &str) -> Result<bool, Box<dyn Error + Send + Sync>> {
-        // Проверяем токен с каждым ключом
+        // Check token with each key
         for (i, key) in self.secret_keys.iter().enumerate() {
             if self.validate_with_key(_token_uuid, _start_time_str, _hmac, key).await? {
                 debug!("Token was accepted by key {}", self.secret_keys_labels[i]);
