@@ -32,7 +32,7 @@ impl Stream {
     pub fn new_tcp(addr: SocketAddr) -> Result<Self> {
         debug!("Connecting to TCP at {}", addr);
         let stream = TcpStream::connect(addr)?;
-        if let Err(e) = stream.set_nodelay(true) {
+        if let Err(_) = stream.set_nodelay(true) {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             if let Err(e) = stream.set_nodelay(true) {
                 info!("Failed to set TCP_NODELAY: {}", e);
@@ -85,6 +85,7 @@ impl Stream {
     }
 
     pub fn new_rustls(addr: SocketAddr, cert_path: Option<&Path>, key_path: Option<&Path>) -> Result<Self> {
+        debug!("Creating Rustls stream {:?}", addr);
         let stream = RustlsStream::new(addr, cert_path, key_path)?;
         Ok(Self::Rustls(stream))
     }
@@ -120,7 +121,12 @@ impl Stream {
 
     pub fn new_openssl(addr: SocketAddr) -> Result<Self> {
         let stream1 = TcpStream::connect(addr)?;
-        stream1.set_nodelay(true)?;
+        if let Err(_) = stream1.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = stream1.set_nodelay(true) {
+                debug!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
         let stream = OpenSslStream::new(stream1, "localhost")?;
         Ok(Self::OpenSsl(stream))
     }
@@ -128,7 +134,12 @@ impl Stream {
 
     pub fn new_websocket_tls(addr: SocketAddr) -> Result<Self> {
         let stream1 = TcpStream::connect(addr)?;
-        stream1.set_nodelay(true)?;
+        if let Err(_) = stream1.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = stream1.set_nodelay(true) {
+                debug!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
         let stream = WebSocketTlsClient::new(addr,stream1, "localhost")?;
         Ok(Self::WebSocketTls(stream))
     }

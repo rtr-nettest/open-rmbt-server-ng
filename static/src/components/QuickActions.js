@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import History from './History';
-import Documentation from './Documentation';
 
 const QuickActions = () => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isDocumentationOpen, setIsDocumentationOpen] = useState(false);
 
   return (
     <>
@@ -17,23 +15,20 @@ const QuickActions = () => {
           <span className="btn-text">HISTORY</span>
         </button>
         
-        <button 
+        <a 
           className="quick-action-btn docs-btn"
-          onClick={() => setIsDocumentationOpen(true)}
+          href="https://specure.github.io/nettest/docs"
+          target="_blank"
+          rel="noopener noreferrer"
           title="Documentation"
         >
           <span className="btn-text">DOCS</span>
-        </button>
+        </a>
       </div>
 
       <History
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
-      />
-      
-      <Documentation
-        isOpen={isDocumentationOpen}
-        onClose={() => setIsDocumentationOpen(false)}
       />
     </>
   );

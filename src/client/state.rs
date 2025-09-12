@@ -74,8 +74,8 @@ pub struct MeasurementState {
     pub write_buffer: [u8; 1024 * 8],
     pub read_pos: usize,
     pub write_pos: usize,
-    pub download_measurements: VecDeque<(u64, u64)>, // Хранит (t_k^(j), b_k^(j)) для каждого чанка\
-    pub upload_measurements: VecDeque<(u64, u64)>, // Хранит (t_k^(j), b_k^(j)) для каждого чанка\
+    pub download_measurements: VecDeque<(u64, u64)>, // Stores (t_k^(j), b_k^(j)) for each chunk
+    pub upload_measurements: VecDeque<(u64, u64)>, // Stores (t_k^(j), b_k^(j)) for each chunk
     pub failed: bool,
     pub stream: Stream,
     pub total_chunks: u32,
@@ -107,7 +107,7 @@ impl TestState {
             debug!("WebSocket TLS stream created");
             stream
         } else if use_tls {
-            debug!("Creating Rustls stream");
+            debug!("Creating Rustls stream {:?}", addr);
             Stream::new_rustls(addr, cert_path, key_path)?
         } else {
             if use_websocket {

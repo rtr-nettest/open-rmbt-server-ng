@@ -47,7 +47,12 @@ impl WebSocketClient {
     pub fn new(addr: SocketAddr) -> Result<Self> {
         debug!("Connecting to WebSocket server WS at {}", addr);
         let mut stream = TcpStream::connect(addr)?;
-        stream.set_nodelay(true)?;
+        if let Err(_) = stream.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = stream.set_nodelay(true) {
+                debug!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
 
         // Generate WebSocket key
         let key = BASE64.encode(b"dGhlIHNhbXBsZSBub25jZQ==");
@@ -66,11 +71,11 @@ impl WebSocketClient {
             addr, key
         );
 
-        // Создаем Poll для ожидания событий
+        // Create Poll for waiting events
         let mut poll = Poll::new()?;
         let mut events = mio::Events::with_capacity(128);
 
-        // Регистрируем сокет для чтения и записи
+        // Register socket for reading and writing
         poll.registry()
             .register(&mut stream, Token(0), Interest::WRITABLE)?;
 
@@ -276,7 +281,6 @@ impl Write for WebSocketClient {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         if self.flushed {
             let message = if buf.len() < 2 || buf.len() > (CHUNK_SIZE - 3) {
-                debug!("Writing binary {} bytes", buf.len());
                 tokio_tungstenite::tungstenite::Message::Binary(buf.to_vec())
             } else {
                 tokio_tungstenite::tungstenite::Message::Text(

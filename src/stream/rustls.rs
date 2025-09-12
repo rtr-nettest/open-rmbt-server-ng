@@ -26,7 +26,12 @@ impl RustlsStream {
         key_path: Option<&Path>,
     ) -> Result<Self> {
         let stream = TcpStream::connect(addr)?;
-        stream.set_nodelay(true)?;
+        if let Err(_) = stream.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = stream.set_nodelay(true) {
+                info!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
 
         let config = if let (Some(cert_path), Some(key_path)) = (cert_path, key_path) {
             let mut root_store = RootCertStore::empty();
@@ -50,7 +55,7 @@ impl RustlsStream {
             config
         };
 
-        // Используем IP-адрес как домен для локального соединения
+        // Use IP address as domain for local connection
         let server_name = if addr.ip().is_loopback() {
             ServerName::DnsName("localhost".try_into()?)
         } else {
@@ -87,7 +92,7 @@ impl RustlsStream {
         match self.conn.read_tls(&mut self.stream) {
             Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
                 // trace!("TLS read would block");
-                // Принудительно отправляем данные для очистки буфера
+                // Force send data to clear buffer
                 if self.conn.wants_write() {
                     self.conn.write_tls(&mut self.stream)?;
                 }
@@ -186,7 +191,7 @@ impl RustlsStream {
             return self.read(buf);
         }
 
-        // Принудительно отправляем данные для очистки буфера
+        // Force send data to clear buffer
         if self.conn.wants_write() {
             trace!("Wants write");
             self.conn.write_tls(&mut self.stream)?;
@@ -204,7 +209,7 @@ impl RustlsStream {
     pub fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let mut total_written = 0;
 
-        // Проверяем, есть ли данные в буфере для отправки
+        // Check if there's data in buffer to send
         while self.conn.wants_write() {
             match self.conn.write_tls(&mut self.stream) {
                 Ok(_) => {}
@@ -228,13 +233,13 @@ impl RustlsStream {
         }
 
 
-        // Теперь пробуем записать новые данные
+        // Now try to write new data
         while total_written < buf.len() {
             match self.conn.writer().write(&buf[total_written..]) {
                 Ok(n) => {
                     total_written += n;
 
-                    // Пытаемся отправить данные в сеть
+                    // Try to send data to network
                     while self.conn.wants_write() {
                         match self.conn.write_tls(&mut self.stream) {
                             Ok(_) => {
@@ -290,7 +295,7 @@ impl RustlsStream {
     pub fn close(&mut self) -> io::Result<()> {
         debug!("Closing TLS connection");
 
-        // Отправляем close_notify
+        // Send close_notify
         if self.conn.wants_write() {
             match self.conn.write_tls(&mut self.stream) {
                 Ok(_) => debug!("Sent TLS close_notify"),
@@ -298,7 +303,7 @@ impl RustlsStream {
             }
         }
 
-        // Закрываем TCP соединение
+        // Close TCP connection
         self.stream.shutdown(std::net::Shutdown::Both)
     }
 }

@@ -1,4 +1,4 @@
-use log::{debug, info, trace};
+use log::{info, trace};
 use mio::{Interest, Poll};
 use std::io;
 

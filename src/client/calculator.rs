@@ -1,4 +1,4 @@
-use crate::client::{client::Measurement, print::printer::print_test_result};
+use crate::client::{client::Measurement};
 
 
 pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> (f64, f64, f64) {
@@ -6,16 +6,16 @@ pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> 
         return (0.0, 0.0, 0.0);
     }
 
-    let skip_time_ns = 1_000_000_000u64; // 1 секунда в наносекундах
+    let skip_time_ns = 1_000_000_000u64; // 1 second in nanoseconds
     
-    // Находим минимальное время начала измерения
+    // Find minimum measurement start time
     let min_start_time = measurements
         .iter()
         .filter_map(|m| m.first().map(|(time, _)| *time))
         .min()
         .unwrap_or(0);
 
-    // Находим t* - минимальное время последнего измерения среди всех потоков
+    // Find t* - minimum time of last measurement among all threads
     let t_star_original = measurements
         .iter()
         .filter_map(|m| m.last().map(|(time, _)| *time))
@@ -26,26 +26,26 @@ pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> 
         return (0.0, 0.0, 0.0);
     }
 
-    // t* с учетом пропуска первых 2 секунд
+    // t* accounting for skipping first 2 seconds
     let t_star = t_star_original - skip_time_ns;
     
-    // Если после пропуска 2 секунд времени недостаточно, возвращаем 0
+    // If after skipping 2 seconds time is insufficient, return 0
     if t_star <= 0 {
         return (0.0, 0.0, 0.0);
     }
 
     let mut total_bytes = 0.0;
 
-    // Для каждого потока k
+    // For each thread k
     for thread_measurements in measurements {
         if thread_measurements.is_empty() {
             continue;
         }
 
-        // Интерполируем данные в начале (после пропуска 2 секунд)
+        // Interpolate data at start (after skipping 2 seconds)
         let bytes_at_start = interpolate_bytes_at_time(&thread_measurements, min_start_time + skip_time_ns);
         
-        // Находим l_k - индекс первого измерения >= t_star (относительно начала + 2 секунды)
+        // Find l_k - index of first measurement >= t_star (relative to start + 2 seconds)
         let mut l_k_index = None;
         for (j, (time, _)) in thread_measurements.iter().enumerate() {
             if *time >= (min_start_time + skip_time_ns + t_star) {
@@ -54,15 +54,15 @@ pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> 
             }
         }
 
-        // Если не нашли измерение >= t_star, используем последнее
+        // If no measurement >= t_star found, use last one
         let l_k = l_k_index.unwrap_or(thread_measurements.len() - 1);
 
-        // Интерполяция согласно RMBT спецификации
+        // Interpolation according to RMBT specification
         let b_k = if l_k == 0 {
-            // Если первое измерение уже >= t_star, интерполируем от начала
+            // If first measurement already >= t_star, interpolate from start
             interpolate_bytes_at_time(&thread_measurements, min_start_time + skip_time_ns + t_star)
         } else if l_k < thread_measurements.len() {
-            // Интерполяция между двумя точками
+            // Interpolation between two points
             let (t_lk_minus_1, b_lk_minus_1) = thread_measurements[l_k - 1];
             let (t_lk, b_lk) = thread_measurements[l_k];
 
@@ -72,20 +72,20 @@ pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> 
                 let ratio = (target_time - t_lk_minus_1) as f64 / (t_lk - t_lk_minus_1) as f64;
                 b_lk_minus_1 as f64 + ratio * (b_lk - b_lk_minus_1) as f64
             } else {
-                // Если времена равны, используем последнее значение
+                // If times are equal, use last value
                 b_lk as f64
             }
         } else {
-            // Если l_k указывает за пределы массива, используем последнее измерение
+            // If l_k points beyond array bounds, use last measurement
             thread_measurements.last().unwrap().1 as f64
         };
 
-        // Вычитаем байты на начало (после пропуска 2 секунд)
+        // Subtract bytes at start (after skipping 2 seconds)
         let b_k_adjusted = b_k - bytes_at_start;
         total_bytes += b_k_adjusted;
     }
 
-    // Вычисляем скорость R = (1/t*) * Σ(b_k) с учетом пропуска первых 2 секунд
+    // Calculate speed R = (1/t*) * Σ(b_k) accounting for skipping first 2 seconds
     let speed_bps = (total_bytes * 8.0) / (t_star as f64 / 1_000_000_000.0);
     let speed_gbps = speed_bps / 1_000_000_000.0;
     let speed_mbps = speed_bps / 1_000_000.0;

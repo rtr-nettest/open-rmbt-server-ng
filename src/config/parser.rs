@@ -9,16 +9,16 @@ pub fn read_config_file() -> FileConfig {
     use std::path::PathBuf;
     use std::env;
 
-    // Определяем путь к конфигурационному файлу в зависимости от ОС
+    // Determine config file path based on OS
     let config_path = if cfg!(target_os = "macos") {
-        // На macOS используем ~/.config/ как основную директорию
+        // On macOS use ~/.config/ as main directory
         let home_dir = env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         PathBuf::from(format!("{}/.config/nettest.conf", home_dir))
     } else {
         PathBuf::from("/etc/nettest.conf")
     };
 
-    // Проверяем права доступа и читаем файл
+    // Check permissions and read file
     let config_content = if config_path.exists() {
         match fs::read_to_string(&config_path) {
             Ok(content) => {
@@ -147,7 +147,7 @@ fn parse_config_content(content: &str) -> FileConfig {
                 "x_nettest_client" => config.x_nettest_client = value.to_string(),
                 "control_server" => config.control_server = value.to_string(),
                 "client_uuid" => {
-                    // Убираем кавычки если они есть
+                    // Remove quotes if present
                     let clean_value = value.trim_matches('"').trim();
                     if !clean_value.is_empty() {
                         config.client_uuid = Some(clean_value.to_string());

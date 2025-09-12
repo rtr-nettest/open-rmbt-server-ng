@@ -47,12 +47,12 @@ pub fn handle_put_time_result_receive_time(
         let end = "ACCEPT GETCHUNKS GETTIME PUT PUTNORESULT PING QUIT\n";
 
         if time_line.ends_with(end) {
-            // Проверяем, является ли это TIMERESULT сообщением
+            // Check if this is a TIMERESULT message
             if time_line.starts_with("TIMERESULT ") {
-                let data_part = &time_line[11..]; // Убираем "TIMERESULT "
+                let data_part = &time_line[11..]; // Remove "TIMERESULT "
                 debug!("Parsing TIMERESULT data: {}", data_part.trim());
                 
-                // Парсим пары (time bytes) из TIMERESULT сообщения
+                // Parse (time bytes) pairs from TIMERESULT message
                 let pairs: Vec<(u64, u64)> = data_part
                     .split("; ")
                     .filter_map(|pair| {
@@ -70,12 +70,12 @@ pub fn handle_put_time_result_receive_time(
                 
                 debug!("Parsed {} time-bytes pairs: {:?}", pairs.len(), pairs);
                 
-                // Добавляем все пары в upload_measurements
+                // Add all pairs to upload_measurements
                 for (time, bytes) in &pairs {
                     measurement_state.upload_measurements.push_back((*time, *bytes));
                 }
                 
-                // Устанавливаем итоговые результаты (последняя пара)
+                // Set final results (last pair)
                 if let Some((last_time, last_bytes)) = pairs.last() {
                     measurement_state.upload_time = Some(*last_time);
                     measurement_state.upload_bytes = Some(*last_bytes);

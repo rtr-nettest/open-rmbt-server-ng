@@ -34,14 +34,14 @@ impl WebSocketTlsClient {
         ctx.set_options(SslOptions::NO_COMPRESSION);
         ctx.set_ciphersuites("TLS_AES_128_GCM_SHA256")?;
 
-        // Установка сертификатов и ключей
+        // Set certificates and keys
         ctx.set_certificate_file(&cert_path, openssl::ssl::SslFiletype::PEM)?;
         ctx.set_private_key_file(&key_path, openssl::ssl::SslFiletype::PEM)?;
 
         let ssl = Ssl::new(&ctx.build())?;
         let stream = SslStream::new(ssl, stream)?;
 
-        // Хендшейк TLS вы должны завершить позже (например: stream.accept() или stream.do_handshake())
+        // TLS handshake must be completed later (e.g.: stream.accept() or stream.do_handshake())
 
         Ok(Self {
             ws: WebSocket::from_raw_socket(stream, tungstenite::protocol::Role::Server, None),
@@ -61,7 +61,7 @@ impl WebSocketTlsClient {
         ctx.set_options(SslOptions::NO_COMPRESSION);
         ctx.set_ciphersuites("TLS_AES_128_GCM_SHA256")?;
 
-        // Устанавливаем версии протокола
+        // Set protocol versions
         ctx.set_max_proto_version(Some(openssl::ssl::SslVersion::TLS1_3))?;
         ctx.set_min_proto_version(Some(openssl::ssl::SslVersion::TLS1_2))?;
 
@@ -72,29 +72,34 @@ impl WebSocketTlsClient {
         let mut stream = SslStream::new(ssl, stream)?;
         debug!("SSL stream created");
 
-        // Устанавливаем неблокирующий режим
+        // Set non-blocking mode
         let tcp_stream = stream.get_mut();
-        tcp_stream.set_nodelay(true)?;
+        if let Err(_) = tcp_stream.set_nodelay(true) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if let Err(e) = tcp_stream.set_nodelay(true) {
+                debug!("Failed to set TCP_NODELAY: {}", e);
+            }
+        }
 
-        // Создаем Poll для ожидания событий
+        // Create Poll for waiting events
         let mut poll = Poll::new()?;
         let mut events = mio::Events::with_capacity(128);
 
-        // Регистрируем сокет для чтения и записи
+        // Register socket for reading and writing
         poll.registry().register(
             stream.get_mut(),
             Token(0),
             Interest::READABLE | Interest::WRITABLE,
         )?;
 
-        // Ждем, пока TCP соединение будет установлено
+        // Wait until TCP connection is established
         loop {
             poll.poll(&mut events, None)?;
             let mut connection_ready = false;
 
             for event in events.iter() {
                 if event.is_writable() {
-                    // Проверяем, что соединение действительно установлено
+                    // Check that connection is actually established
                     if let Err(e) = stream.get_ref().peer_addr() {
                         if e.kind() == io::ErrorKind::NotConnected {
                             debug!("TCP connection not ready yet, waiting...");
@@ -111,7 +116,7 @@ impl WebSocketTlsClient {
             }
         }
 
-        // Теперь можно начинать TLS handshake
+        // Now can start TLS handshake
         loop {
             match stream.connect() {
                 Ok(_) => {
@@ -119,7 +124,7 @@ impl WebSocketTlsClient {
                     break;
                 }
                 Err(e) => {
-                    // Проверяем на вложенную ошибку WouldBlock
+                    // Check for nested WouldBlock error
                     if let Some(io_error) = e.io_error() {
                         if io_error.kind() == io::ErrorKind::WouldBlock {
                             debug!("Socket not ready, waiting...");
@@ -151,7 +156,7 @@ impl WebSocketTlsClient {
         );
 
 
-        // Регистрируем сокет для чтения и записи
+        // Register socket for reading and writing
         poll.registry()
             .reregister(stream.get_mut(), Token(0), Interest::WRITABLE)?;
 
@@ -373,7 +378,6 @@ impl Write for WebSocketTlsClient {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         if self.flushed {
             let message = if buf.len() < 2 || buf.len() > (CHUNK_SIZE - 3) {
-                debug!("Writing binary {} bytes", buf.len());
                 tokio_tungstenite::tungstenite::Message::Binary(buf.to_vec())
             } else {
                 tokio_tungstenite::tungstenite::Message::Text(

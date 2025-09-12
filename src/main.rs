@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn StdError + Send + Sync>> {
 
         let mut mio_server = MioServer::new(args, config)?;
         
-        // Создаем отдельный поток для обработки сигналов
+        // Create separate thread for signal handling
         let shutdown_signal = mio_server.get_shutdown_signal();
         tokio::spawn(async move {
             signal::ctrl_c().await.expect("Failed to listen for Ctrl+C");

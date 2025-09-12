@@ -7,12 +7,14 @@ use std::io::{self};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use std::net::SocketAddr;
 
 use crate::config::constants::MIN_CHUNK_SIZE;
 use crate::mioserver::handlers::basic_handler::{
     handle_client_readable_data, handle_client_writable_data,
 };
+
+// Connection processing timeout constant
+const CONNECTION_PROCESSING_TIMEOUT: u64 = 60; 
 use crate::mioserver::server::{ConnectionType, ServerConfig, TestState};
 use crate::mioserver::ServerTestPhase;
 use crate::stream::stream::Stream;
@@ -29,7 +31,7 @@ struct Worker {
     connections: HashMap<Token, TestState>,
     events: Events,
     worker_connection_counts: Arc<Mutex<Vec<usize>>>,
-    global_queue: Arc<Mutex<VecDeque<(ConnectionType, Instant)>>>, // Общая очередь
+    global_queue: Arc<Mutex<VecDeque<(ConnectionType, Instant)>>>, // Global queue
     server_config: ServerConfig,
     next_token: usize,
     
@@ -106,30 +108,26 @@ impl Worker {
                 None
             };
 
-            let mut ip: Option<SocketAddr> = None;
-
             if let Some(connection) = maybe_connection {
-                let mut stream = match connection {
+                let (mut stream, ip) = match connection {
                     ConnectionType::Tcp(stream, client_addr) => {
-                        ip = Some(client_addr);
-                        Stream::Tcp(stream)
+                        (Stream::Tcp(stream), Some(client_addr))
                     },
                     ConnectionType::Tls(stream, client_addr) => {
-                        ip = Some(client_addr);
                         let stream = Stream::new_rustls_server(
                             stream,
                             self.server_config.cert_path.clone().unwrap(),
                             self.server_config.key_path.clone().unwrap(),
                         )
                         .unwrap();
-                        stream
+                        (stream, Some(client_addr))
                     }
                 };
 
                 let token = Token(self.next_token);
                 self.next_token += 1;
 
-                // Регистрируем новое соединение
+                // Register new connection
                 if let Err(e) = stream.register(&self.poll, token, Interest::READABLE | Interest::WRITABLE) {
                     info!("Worker {}: Failed to register connection: {}", self.id, e);
                     continue;
@@ -141,7 +139,7 @@ impl Worker {
                             token,
                             TestState {
                                 token,
-                                last_active: Instant::now(),
+                                connection_start: Instant::now(), // Connection processing start time
                                 // stream: Stream::new_rustls_server(stream, None, None).unwrap(),
                                 stream: stream,
                                 measurement_state: ServerTestPhase::GreetingSendVersion,
@@ -171,6 +169,13 @@ impl Worker {
                     },
                     Err(e) => {
                         info!("Worker {}: Error handling greeting: {}", self.id, e);
+                        {
+                            let mut counts = self.worker_connection_counts.lock().unwrap();
+                            counts[self.id] -= 1;
+                            self.connections.remove(&token);
+                            debug!("Worker {}: connection count decreased to {} (after greeting error)", 
+                                   self.id, counts[self.id]);
+                        }
                         continue;
                     }
                 };
@@ -186,6 +191,19 @@ impl Worker {
             if !self.connections.is_empty() {
                 self.process_all_connections()?;
             } else {
+                thread_local! {
+                    static LAST_QUEUE_CHECK: std::cell::RefCell<std::time::Instant> = 
+                        std::cell::RefCell::new(std::time::Instant::now());
+                }
+                
+                LAST_QUEUE_CHECK.with(|last_check| {
+                    let mut last_check = last_check.borrow_mut();
+                    if last_check.elapsed() > Duration::from_secs(10) {
+                        self.check_global_queue_timeout();
+                        *last_check = std::time::Instant::now();
+                    }
+                });
+                
                 thread::sleep(Duration::from_millis(100));
             }
         }
@@ -207,7 +225,6 @@ impl Worker {
             let event_token = event.token();
             if let Some(state) = self.connections.get_mut(&event_token) {
                 let mut should_remove: Result<usize, io::Error> = Ok(0);
-                state.last_active = Instant::now();
                 if event.is_readable() {
                     trace!(
                         "Worker {}: event is readable for token {:?}",
@@ -249,8 +266,9 @@ impl Worker {
         }
 
         for (token, state) in self.connections.iter_mut() {
-            if state.last_active.elapsed() > Duration::from_secs(15) {
-                debug!("Worker {}: connection {:?} timed out", self.id, token);
+            if state.connection_start.elapsed() > Duration::from_secs(CONNECTION_PROCESSING_TIMEOUT) {
+                debug!("Worker {}: connection {:?} processing timeout after {} seconds", 
+                       self.id, token, CONNECTION_PROCESSING_TIMEOUT);
                 connections_to_remove.push(token.clone());
             }
         }
@@ -273,7 +291,7 @@ impl Worker {
             );
         }
 
-        debug!("Worker {}: finished processing events", self.id);
+        trace!("Worker {}: finished processing events", self.id);
 
         Ok(())
     }
@@ -291,7 +309,7 @@ impl Worker {
         let start_time = std::time::Instant::now();
 
         while !loop_flag {
-            // Проверяем таймаут
+            // Check timeout
             if start_time.elapsed() > timeout {
                 debug!("Worker {}: handshake timeout after {:?}", self.id, timeout);
                 stream.close().unwrap();
@@ -301,7 +319,7 @@ impl Worker {
 
             stream.reregister(&self.poll, token, Interest::WRITABLE | Interest::READABLE)?;
 
-            // Используем таймаут для poll
+            // Use timeout for poll
             let poll_timeout = timeout - start_time.elapsed();
             self.poll.poll(&mut self.events, Some(poll_timeout))?;
             for event in self.events.iter() {
@@ -355,5 +373,22 @@ impl Worker {
         }
         debug!("Worker {}: handshake done", self.id);
         Ok(stream)
+    }
+
+    fn check_global_queue_timeout(&self) {
+        let mut global_queue = self.global_queue.lock().unwrap();
+        let now = Instant::now();
+        let timeout_duration = Duration::from_secs(60); // 60 seconds timeout for worker
+        
+        let initial_size = global_queue.len();
+        global_queue.retain(|(_, timestamp)| {
+            now.duration_since(*timestamp) <= timeout_duration
+        });
+        
+        let removed_count = initial_size - global_queue.len();
+        if removed_count > 0 {
+            debug!("Worker {}: removed {} timed out connections from global queue (remaining: {})", 
+                   self.id, removed_count, global_queue.len());
+        }
     }
 }
