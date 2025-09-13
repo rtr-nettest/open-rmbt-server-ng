@@ -199,7 +199,7 @@ impl Worker {
                     self.connections.len()
                 );
             } else {
-                info!("Worker {}: no connections to process", self.id);
+                trace!("Worker {}: no connections to process", self.id);
             }
 
             if !self.connections.is_empty() {
