@@ -86,10 +86,11 @@ impl Worker {
 
     fn run(&mut self) -> io::Result<()> {
         loop {
+        
             let maybe_connection = if self.connections.is_empty() {
                 let mut global_queue = self.global_queue.lock().unwrap();
                 if let Some((connection, _)) = global_queue.pop_front() {
-                    trace!("Worker {}: taking connection from global queue (queue size after: {})", 
+                    info!("Worker {}: taking connection from global queue (queue size after: {})", 
                         self.id, global_queue.len());
                     {
                         let mut counts = self.worker_connection_counts.lock().unwrap();
@@ -173,7 +174,7 @@ impl Worker {
                             let mut counts = self.worker_connection_counts.lock().unwrap();
                             counts[self.id] -= 1;
                             self.connections.remove(&token);
-                            debug!("Worker {}: connection count decreased to {} (after greeting error)", 
+                            info!("Worker {}: connection count decreased to {} (after greeting error)", 
                                    self.id, counts[self.id]);
                         }
                         continue;
@@ -280,10 +281,10 @@ impl Worker {
                 debug!("Worker {}: removing connection {:?}", self.id, token);
                 let mut counts = self.worker_connection_counts.lock().unwrap();
                 counts[self.id] -= 1;
-                debug!("Worker {}: connection count decreased to {}", self.id, counts[self.id]);
+                info!("Worker {}: connection count decreased to {}", self.id, counts[self.id]);
             }
 
-            debug!(
+            info!(
                 "Worker {}: connection {:?} closed, remaining connections: {}",
                 self.id,
                 token,
