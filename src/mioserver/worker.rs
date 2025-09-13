@@ -106,10 +106,12 @@ impl Worker {
                     None
                 }
             } else {
+                info!("Worker {}: no connections to process", self.id);
                 None
             };
 
             if let Some(connection) = maybe_connection {
+                info!("Worker {}: processing connection", self.id);
                 let (mut stream, ip) = match connection {
                     ConnectionType::Tcp(stream, client_addr) => {
                         (Stream::Tcp(stream), Some(client_addr))
@@ -127,6 +129,8 @@ impl Worker {
 
                 let token = Token(self.next_token);
                 self.next_token += 1;
+
+                info!("Worker {}: registering connection", self.id);
 
                 // Register new connection
                 if let Err(e) = stream.register(&self.poll, token, Interest::READABLE | Interest::WRITABLE) {
@@ -187,6 +191,8 @@ impl Worker {
                     token,
                     self.connections.len()
                 );
+            } else {
+                info!("Worker {}: no connections to process", self.id);
             }
 
             if !self.connections.is_empty() {
@@ -302,7 +308,7 @@ impl Worker {
         mut stream: Stream,
         token: Token,
     ) -> io::Result<Stream> {
-        debug!("Worker {}: handle_greeting_receive_connection_type", self.id);
+        info!("Worker {}: handle_greeting_receive_connection_type", self.id);
         let mut buffer = vec![0; 1024];
         let mut result = BytesMut::new();
         let mut loop_flag = false;
@@ -372,7 +378,7 @@ impl Worker {
                 }
             }
         }
-        debug!("Worker {}: handshake done", self.id);
+        info!("Worker {}: handshake done", self.id);
         Ok(stream)
     }
 

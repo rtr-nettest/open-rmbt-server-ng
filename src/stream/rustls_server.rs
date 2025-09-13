@@ -38,6 +38,8 @@ impl RustlsServerStream {
 
         let conn = ServerConnection::new(Arc::new(config))?;
 
+        info!("RustlsServerStream created");
+
         // conn.set_buffer_limit(Some(1024 * 1024 * 10));
 
         Ok(Self {
