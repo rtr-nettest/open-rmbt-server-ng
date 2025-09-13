@@ -177,7 +177,14 @@ impl Worker {
                         {
                             let mut counts = self.worker_connection_counts.lock().unwrap();
                             counts[self.id] -= 1;
-                            self.connections.remove(&token);
+
+                            // Explicitly close the connection before removing
+                            if let Some(mut connection) = self.connections.remove(&token) {
+                                if let Err(close_err) = connection.stream.close() {
+                                    debug!("Failed to close stream: {}", close_err);
+                                }
+                                drop(connection.stream);
+                            }
                             info!("Worker {}: connection count decreased to {} (after greeting error)", 
                                    self.id, counts[self.id]);
                         }
@@ -266,6 +273,10 @@ impl Worker {
                             "Worker {}: Error handling client data for token {:?} with error {:?} and measurement state {:?}",
                             self.id, event_token, e, state.measurement_state
                         );
+                        // Force close the connection immediately
+                        if let Err(close_err) = state.stream.close() {
+                            debug!("Failed to close stream: {}", close_err);
+                        }
                         connections_to_remove.push(event_token);
                     }
                 }
@@ -282,7 +293,13 @@ impl Worker {
 
 
         for token in connections_to_remove {
-            self.connections.remove(&token);
+            // Explicitly close the connection before removing
+            if let Some(mut connection) = self.connections.remove(&token) {
+                if let Err(close_err) = connection.stream.close() {
+                    debug!("Failed to close stream: {}", close_err);
+                }
+                drop(connection.stream);
+            }
             {
                 debug!("Worker {}: removing connection {:?}", self.id, token);
                 let mut counts = self.worker_connection_counts.lock().unwrap();
@@ -320,6 +337,7 @@ impl Worker {
             if start_time.elapsed() > timeout {
                 debug!("Worker {}: handshake timeout after {:?}", self.id, timeout);
                 stream.close().unwrap();
+                drop(stream);
                 self.connections.remove(&token);
                 return Err(io::Error::new(io::ErrorKind::TimedOut, "Handshake timeout"));
             }
@@ -331,7 +349,6 @@ impl Worker {
             self.poll.poll(&mut self.events, Some(poll_timeout))?;
             for event in self.events.iter() {
                 if event.is_readable() {
-                    debug!("Worker {}: event is readable", self.id);
                     match stream.read(&mut buffer) {
                         Ok(n) => {
                             result.extend_from_slice(&buffer[..n]);
