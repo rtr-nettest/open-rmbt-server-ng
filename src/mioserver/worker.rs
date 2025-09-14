@@ -106,7 +106,7 @@ impl Worker {
                     None
                 }
             } else {
-                info!("Worker {}: no connections to process", self.id);
+                trace!("Worker {}: no connections to process", self.id);
                 None
             };
 
