@@ -235,7 +235,7 @@ impl Worker {
         let mut connections_to_remove = Vec::new();
 
         for event in self.events.iter() {
-            debug!("Worker {}: event {:?} token {:?}", self.id, event, event.token());
+            trace!("Worker {}: event {:?} token {:?}", self.id, event, event.token());
             let event_token = event.token();
             if let Some(state) = self.connections.get_mut(&event_token) {
                 let mut should_remove: Result<usize, io::Error> = Ok(0);
