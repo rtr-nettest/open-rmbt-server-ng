@@ -6,6 +6,7 @@ use crate::{
     config::constants::{MAX_CHUNK_SIZE, MIN_CHUNK_SIZE},
     mioserver::{server::TestState, ServerTestPhase},
 };
+use crate::mioserver::handlers::timeout_utils::check_timeout_periodic;
 
 pub fn handle_main_command_send(poll: &Poll, state: &mut TestState) -> io::Result<usize> {
     info!("handle_get_put_ping_quit_send");
@@ -28,6 +29,8 @@ pub fn handle_main_command_send(poll: &Poll, state: &mut TestState) -> io::Resul
                 .reregister(poll, state.token, Interest::READABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_main_command_send")?;
     }
 }
 
@@ -233,5 +236,7 @@ pub fn handle_main_command_receive(poll: &Poll, state: &mut TestState) -> io::Re
             state.measurement_state = ServerTestPhase::AcceptCommandReceive;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_main_command_receive")?;
     }
 }

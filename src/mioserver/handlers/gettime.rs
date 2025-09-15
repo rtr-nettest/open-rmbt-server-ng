@@ -7,6 +7,7 @@ use crate::{
     client::globals::{get_chunk, CHUNK_STORAGE, CHUNK_TERMINATION_STORAGE},
     mioserver::{server::TestState, ServerTestPhase},
 };
+use crate::mioserver::handlers::timeout_utils::check_timeout_periodic;
 
 pub fn handle_get_time_send_chunk(poll: &Poll, state: &mut TestState) -> io::Result<usize> {
     trace!("handle_get_time_send_chunk");
@@ -88,6 +89,9 @@ pub fn handle_get_time_receive_ok(poll: &Poll, state: &mut TestState) -> io::Res
     trace!("handle_get_time_receive_ok");
     loop {
         let n = state.stream.read(&mut state.read_buffer)?;
+        if n == 0 {
+            return Err(io::Error::new(io::ErrorKind::Other, "EOF"));
+        }
         state.read_pos += n;
         if state.read_buffer[0..state.read_pos] == b"OK\n"[..] {
             state.measurement_state = ServerTestPhase::GetTimeSendTime;
@@ -98,6 +102,8 @@ pub fn handle_get_time_receive_ok(poll: &Poll, state: &mut TestState) -> io::Res
                 .reregister(poll, state.token, Interest::WRITABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_get_time_receive_ok")?;
     }
 }
 
@@ -118,5 +124,7 @@ pub fn handle_get_time_send_time(poll: &Poll, state: &mut TestState) -> io::Resu
                 .reregister(poll, state.token, Interest::WRITABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_get_time_send_time")?;
     }
 }

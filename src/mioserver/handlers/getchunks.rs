@@ -101,6 +101,9 @@ pub fn handle_get_chunks_receive_ok(poll: &Poll, state: &mut TestState) -> io::R
     trace!("handle_get_chunks_receive_ok");
     loop {
         let n = state.stream.read(&mut state.read_buffer)?;
+        if n == 0 {
+            return Err(io::Error::new(io::ErrorKind::Other, "EOF"));
+        }
         state.read_pos += n;
         if state.read_buffer[..state.read_pos] == b"OK\n"[..] {
             state.measurement_state = ServerTestPhase::GetChunksSendTime;

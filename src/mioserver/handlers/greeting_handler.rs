@@ -5,6 +5,7 @@ use log::{debug, trace};
 use mio::{Interest, Poll};
 
 use crate::{client::constants::{MAX_CHUNK_SIZE, MIN_CHUNK_SIZE}, config::constants::CHUNK_SIZE, mioserver::{server::TestState, ServerTestPhase}};
+use crate::mioserver::handlers::timeout_utils::check_timeout_periodic;
 
 pub fn handle_greeting_accep_token_read(
     poll: &Poll,
@@ -15,13 +16,16 @@ pub fn handle_greeting_accep_token_read(
         let n = state
             .stream
             .read(&mut state.read_buffer[state.read_pos..])?;
+        if n == 0 {
+            return Err(io::Error::new(io::ErrorKind::Other, "EOF"));
+        }
         state.read_pos += n;
         if state.read_pos >= 4
             && state.read_buffer[state.read_pos - 4..state.read_pos] == [b'\r', b'\n', b'\r', b'\n']
         {
             state.read_pos = 0;
             state.measurement_state = ServerTestPhase::GreetingSendAcceptToken;
-            if let Err(e) = state
+            if let Err(e) =             state
                 .stream
                 .reregister(poll, state.token, Interest::WRITABLE)
             {
@@ -29,6 +33,8 @@ pub fn handle_greeting_accep_token_read(
             }
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_greeting_accep_token_read")?;
     }
 }
 
@@ -63,6 +69,8 @@ pub fn handle_greeting_send_version(
             state.stream.reregister(poll, state.token, Interest::WRITABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_greeting_send_version")?;
     }
 }
 
@@ -95,6 +103,8 @@ pub fn handle_greeting_send_accept_token(
             state.stream.reregister(poll, state.token, Interest::READABLE )?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_greeting_send_accept_token")?;
     }
 }
 
@@ -109,6 +119,9 @@ pub fn handle_greeting_receive_token(
         let n = state
             .stream
             .read(&mut state.read_buffer[state.read_pos..])?;
+        if n == 0 {
+            return Err(io::Error::new(io::ErrorKind::Other, "EOF"));
+        }
         state.read_pos += n;
         let end = b"\n";
         //compare last 2 bytes with end
@@ -120,6 +133,8 @@ pub fn handle_greeting_receive_token(
             state.stream.reregister(poll, state.token, Interest::WRITABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_greeting_receive_token")?;
     }
 }
 
@@ -142,6 +157,8 @@ pub fn handle_greeting_send_ok(
             state.stream.reregister(poll, state.token, Interest::WRITABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_greeting_send_ok")?;
     }
 }
 
@@ -162,6 +179,8 @@ pub fn handle_greeting_send_chunksize( poll: &Poll,
             state.stream.reregister(poll, state.token, Interest::WRITABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_greeting_send_chunksize")?;
     }
 }
 

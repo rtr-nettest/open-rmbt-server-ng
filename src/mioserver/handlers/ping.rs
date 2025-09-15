@@ -3,6 +3,7 @@ use mio::{Interest, Poll};
 use std::{io, time::Instant};
 
 use crate::mioserver::{server::TestState, ServerTestPhase};
+use crate::mioserver::handlers::timeout_utils::check_timeout_periodic;
 
 pub fn handle_pong_send(poll: &Poll, state: &mut TestState) -> io::Result<usize> {
     trace!("handle_pong_send");
@@ -24,6 +25,8 @@ pub fn handle_pong_send(poll: &Poll, state: &mut TestState) -> io::Result<usize>
             state.measurement_state = ServerTestPhase::PingReceiveOk;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_pong_send")?;
     }
 }
 
@@ -45,6 +48,8 @@ pub fn handle_ping_receive_ok(poll: &Poll, state: &mut TestState) -> io::Result<
             state.stream.reregister(poll, state.token, Interest::WRITABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_ping_receive_ok")?;
     }
 }
 
@@ -66,5 +71,7 @@ pub fn handle_ping_send_time(poll: &Poll, state: &mut TestState) -> io::Result<u
             state.stream.reregister(poll, state.token, Interest::WRITABLE)?;
             return Ok(n);
         }
+        // Check timeout periodically
+        check_timeout_periodic(state, "handle_ping_send_time")?;
     }
 }

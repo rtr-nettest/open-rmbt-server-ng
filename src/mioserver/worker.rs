@@ -169,6 +169,7 @@ impl Worker {
                                 bytes_received: VecDeque::new(),
                                 client_addr: ip,
                                 sig_key: Some(self.server_config.secret_key.clone()),
+                                loop_iteration_count: 0,
                             },
                         );
                     },

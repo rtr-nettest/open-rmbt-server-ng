@@ -52,6 +52,7 @@ pub struct TestState {
     pub duration: u64,
     pub put_duration: Option<u128>,
     pub chunk_buffer: Vec<u8>,
+    pub loop_iteration_count: u32, // Counter for loop iterations
     pub chunk: Option<BytesMut>,
     pub terminal_chunk: Option<BytesMut>,
     pub bytes_received: VecDeque<(u64, u64)>,
