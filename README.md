@@ -1,3 +1,6 @@
+## Fork
+This is a fork from https://github.com/specure/nettest, a Rust based RMBT implementation (under development).
+
 # 🌐 Nettest - Network Speed Measurement
 
 ![Network Speed Measurement](Gemini_Generated_Image_skkcnfskkcnfskkc.png)
