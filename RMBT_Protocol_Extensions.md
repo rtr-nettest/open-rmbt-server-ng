@@ -54,6 +54,7 @@ PUTTIMERESULT [CHUNKSIZE] [INTERVAL]
 
 **Example without interval (all measurements at end):**
 ```
+sequenceDiagram
 Client -> Server: PUTTIMERESULT 131072
 Server -> Client: OK
 Client -> Server: <CHUNKS...>

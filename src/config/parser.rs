@@ -1,10 +1,10 @@
 
 use log::LevelFilter;
 
-use crate::config::{App, FileConfig};
+use crate::config::{FileConfig};
 
 
-pub fn read_config_file() -> FileConfig {
+pub fn read_config_file() -> Result<FileConfig, anyhow::Error> {
     use std::fs;
     use std::path::PathBuf;
     use std::env;
@@ -58,7 +58,7 @@ pub fn read_config_file() -> FileConfig {
     parse_config_content(&config_content)
 }
 
-fn parse_config_content(content: &str) -> FileConfig {
+fn parse_config_content(content: &str) -> Result<FileConfig, anyhow::Error> {
     let mut config = FileConfig::default();
 
     for line in content.lines() {
@@ -73,13 +73,6 @@ fn parse_config_content(content: &str) -> FileConfig {
             let value = value.trim().trim_matches('"');
 
             match key {
-                "default_mode" => {
-                    if value == "server" {
-                        config.app = App::Server;
-                    } else {
-                        config.app = App::Client;
-                    }
-                }
                 "server_tcp_port" => {
                     if let Ok(port) = value.parse::<u16>() {
                         config.server_tcp_port = port.to_string();
@@ -157,11 +150,13 @@ fn parse_config_content(content: &str) -> FileConfig {
                     config.signed_result = value.parse().unwrap_or(false);
                 }
                 _ => {
+                    //return error
                     println!("Warning: Unknown config key: {}", key);
+                    return Err(anyhow::anyhow!("Unknown config key: {}", key));
                 }
             }
         }
     }
 
-    config
+    Ok(config)
 }

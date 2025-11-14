@@ -94,6 +94,7 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
                 return Err(anyhow::anyhow!("Help printed"));
             }
             _ => {
+                print_help();
                 return Err(anyhow::anyhow!("Unknown option: {}", args[i]));
             }
         }
@@ -107,8 +108,7 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
         debug!("No server address provided, using default");
         //TODO: verify tls
         let server = get_best_measurement_server(&config.x_nettest_client, &config.control_server).await?.ok_or_else(|| {
-            println!("No server found, using default");
-            anyhow::anyhow!("No server found")
+            anyhow::anyhow!("No server found. Probably no running servers of version 2.0.0 or higher")
         })?;
         let address = if server.web_address.is_empty() {
             server.ip_address.unwrap()
@@ -132,7 +132,7 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
 
 pub fn print_help() {
     println!("==== Nettest Client ====");
-    println!("Usage: nettest -c <server_address> [-t<num_threads>] [-ws] [-tls] ");
+    println!("Usage: nettest -c <server_address?> [-t<num_threads>] [-ws] [-tls] ");
     println!("By default, nettest will connect to server on port :5005 for TCP or :443 fot TLS");
     println!("Usage: nettest -c 127.0.0.1 -ws -tls -t5");
     println!("-ws - use websocket");
@@ -140,11 +140,8 @@ pub fn print_help() {
     println!("-log - `RUST_LOG=debug ./nettest 127.0.0.1  -t5 -tls -log`");
     println!("-t<num_threads> - number of threads");
     println!("-raw - output results in parseable format (ping/download/upload)");
-    println!("-help - print help");
-    println!("-h - print help");
     println!("-g - print graphs");
     println!("-p - port");
-    println!("-e - encryption key");
-    println!("-h - print help");
+    println!("-help - print help");
     println!("-h - print help");
 }

@@ -36,7 +36,6 @@ pub fn handle_client_readable_data(state: &mut TestState, poll: &Poll) -> io::Re
 pub fn handle_client_writable_data(state: &mut TestState, poll: &Poll) -> io::Result<usize> {
     match state.measurement_state {
         ServerTestPhase::GreetingSendVersion => handle_greeting_send_version(poll, state),
-
         ServerTestPhase::GreetingSendAcceptToken => handle_greeting_send_accept_token(poll, state),
         ServerTestPhase::GreetingSendOk => handle_greeting_send_ok(poll, state),
         ServerTestPhase::GreetingSendChunksize => handle_greeting_send_chunksize(poll, state),
@@ -52,9 +51,7 @@ pub fn handle_client_writable_data(state: &mut TestState, poll: &Poll) -> io::Re
         ServerTestPhase::PingSendTime => handle_ping_send_time(poll, state),
 
         ServerTestPhase::GetTimeSendChunk => handle_get_time_send_chunk(poll, state),
-
         ServerTestPhase::GetTimeSendLastChunk => handle_perf_send_last_chunk(poll, state),
-
         ServerTestPhase::GetTimeSendTime => handle_get_time_send_time(poll, state),
 
         ServerTestPhase::PutNoResultSendOk => handle_put_no_result_send_ok(poll, state),

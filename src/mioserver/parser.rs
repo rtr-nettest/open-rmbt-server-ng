@@ -82,7 +82,8 @@ pub fn parse_args(
                 return Err(anyhow::anyhow!("Help printed"));
             }
             _ => {
-                return Err(anyhow::anyhow!("Unknown option: {}", args[i]));
+                print_help();
+                return Err(anyhow::anyhow!("Unknown option: {}, use -h for help", args[i]));
             }
         }
         i += 1;
@@ -100,18 +101,18 @@ fn print_help() {
     println!("By default, rmbtd will listen TCP on port 5005");
     println!("Usage: 'nettest -s' will listen on TCP on port 5005");
     println!("Usage: 'nettest -s -k privkey1.pem -c fullchain1.pem'  will listen on TCP and TLS on ports 5005 and 443");
-    println!("Usage: nettest -s [-l <listen_address>] [-c <cert_path>] [-k <key_path>] [-t <num_threads>] [-u <user>] [-d] [-D] [-w] [-v <version>]");
+    println!("Usage: nettest -s [-l <listen_address>] [-c <cert_path>] [-k <key_path>] [-t <num_threads>] [-u <user>] [-d] [-w] [-v <version>]");
     println!("command line arguments:\n");
     println!(" -l/-L  listen on (IP and) port; -L for SSL; default port is 5005, 443 for TLS");
     println!("        examples: \"443\",\"1.2.3.4:1234\",\"[2001:1234::567A]:1234\"");
     println!(" -c     path to SSL certificate in PEM format;");
     println!("        intermediate certificates following server cert in same file if needed");
-    println!("        required\n");
-    println!(" -k     path to SSL key file in PEM format; required\n");
-    println!(" -t     number of worker threads to run for handling connections (default: 200)\n");
+    println!("        required for TLS\n");
+    println!(" -k     path to SSL key file in PEM format; required for TLS\n");
     println!(" -u     drop root privileges and setuid to specified user; must be root\n");
     println!(" -d     fork into background as daemon (no argument)\n");
     println!(" -log    log level: info, debug, trace\n");
-    println!(" -e     encryption key for resut signature\n");
     println!(" -register  enable server registration\n");
+    println!("--help - print help");
+    println!("-h - print help");
 }

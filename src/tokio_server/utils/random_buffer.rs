@@ -18,6 +18,7 @@ pub fn get_buffer_size() -> usize {
 }
 
 pub fn get_random_buffer() -> Arc<Vec<u8>> {
+    #[allow(static_mut_refs)]
     unsafe {
         RANDOM_BUFFER.as_ref().expect("Random buffer not initialized").clone()
     }
