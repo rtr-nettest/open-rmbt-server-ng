@@ -125,6 +125,9 @@ fn parse_config_content(content: &str) -> Result<FileConfig, anyhow::Error> {
                         config.logger = LevelFilter::Debug;
                     } else if value == "trace" {
                         config.logger = LevelFilter::Trace;
+                    } else {
+                        println!("Unknown logger level: {}, using default", value);
+                        return Err(anyhow::anyhow!("Unknown logger level: {}", value));
                     }
                 }
                 "server_registration" => {

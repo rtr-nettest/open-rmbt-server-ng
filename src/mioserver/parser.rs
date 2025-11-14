@@ -1,6 +1,10 @@
 use crate::{
-    config::FileConfig, logger, mioserver::{handlers::signed_result::generate_secret_key, server::ServerConfig}, tokio_server::{server_config::parse_listen_address, utils::user}
+    config::FileConfig,
+    logger,
+    mioserver::{handlers::signed_result::generate_secret_key, server::ServerConfig},
+    tokio_server::{server_config::parse_listen_address, utils::user},
 };
+use log::LevelFilter;
 
 pub fn parse_args(
     args: Vec<String>,
@@ -8,15 +12,18 @@ pub fn parse_args(
 ) -> Result<ServerConfig, anyhow::Error> {
     let mut config = ServerConfig {
         tcp_address: parse_listen_address(&default_config.server_tcp_port).unwrap(),
-        tls_address: parse_listen_address(&default_config.server_tls_port.unwrap_or("443".to_string())).unwrap(),
+        tls_address: parse_listen_address(
+            &default_config.server_tls_port.unwrap_or("443".to_string()),
+        )
+        .unwrap(),
         cert_path: default_config.cert_path,
         key_path: default_config.key_path,
-        num_workers: default_config.server_workers, 
+        num_workers: default_config.server_workers,
         user: default_config.user,
         daemon: default_config.daemonize,
         version: Some("2.0.0".to_string()),
         secret_key: generate_secret_key(),
-        log_level: None,
+        log_level: Some(default_config.logger),
         server_registration: default_config.server_registration,
         control_server: default_config.control_server,
         hostname: default_config.hostname,
@@ -83,18 +90,23 @@ pub fn parse_args(
             }
             _ => {
                 print_help();
-                return Err(anyhow::anyhow!("Unknown option: {}, use -h for help", args[i]));
+                return Err(anyhow::anyhow!(
+                    "Unknown option: {}, use -h for help",
+                    args[i]
+                ));
             }
         }
         i += 1;
     }
-    if config.log_level.is_some() {
+    if config.log_level.is_some() && config.log_level.unwrap() != LevelFilter::Off {
+        println!(
+            "Initializing logger with level: {:?}",
+            config.log_level.unwrap()
+        );
         logger::init_logger(config.log_level.unwrap()).unwrap();
     }
     Ok(config)
 }
-
-
 
 fn print_help() {
     println!("==== Nettest Server ====");
