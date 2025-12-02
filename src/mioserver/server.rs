@@ -1,19 +1,14 @@
-use crate::mioserver::control_server::auto_registration::{
-    deregister_server, register_server, start_ping_job,
-};
 use bytes::BytesMut;
 use log::{debug, info, LevelFilter};
 use mio::net::{TcpListener, TcpStream};
-use mio::Token;
+use mio::{Poll, Token, Waker};
 use std::collections::VecDeque;
 use std::io::{self};
 use std::net::SocketAddr;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
-};
+use std::sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}};
 use std::thread;
-use std::time::Instant;
+use std::time::{Instant};
+use crate::mioserver::control_server::auto_registration::{deregister_server, register_server, start_ping_job};
 
 #[derive(Debug)]
 pub enum ConnectionType {
@@ -25,10 +20,11 @@ use crate::config::FileConfig;
 use crate::mioserver::worker::WorkerThread;
 use crate::mioserver::ServerTestPhase;
 use crate::stream::stream::Stream;
+use crate::tokio_server::server_config::parse_listen_address;
 
 pub struct MioServer {
-    tcp_listeners: Vec<TcpListener>,
-    tls_listeners: Vec<TcpListener>,
+    tcp_listener: TcpListener,
+    tls_listener: Option<TcpListener>,
     _worker_threads: Vec<WorkerThread>,
     global_queue: Arc<Mutex<VecDeque<(ConnectionType, Instant)>>>, // Global queue with timestamps
     server_config: ServerConfig,
@@ -66,15 +62,15 @@ pub struct TestState {
 
 #[derive(Clone)]
 pub struct ServerConfig {
-    pub tcp_address: Vec<SocketAddr>,
-    pub tls_address: Vec<SocketAddr>,
+    pub tcp_address: SocketAddr,
+    pub tls_address: SocketAddr,
     pub cert_path: Option<String>,
     pub key_path: Option<String>,
     pub num_workers: Option<usize>,
     pub user: Option<String>,
     pub daemon: bool,
     pub version: Option<String>,
-    pub secret_key: String,
+    pub secret_key: String,  
     pub log_level: Option<LevelFilter>,
     pub server_registration: bool,
     pub control_server: String,
@@ -89,22 +85,27 @@ impl MioServer {
         let server_config = crate::mioserver::parser::parse_args(args, config.clone())
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
-        let mut tcp_listeners = Vec::new();
-        for addr in &server_config.tcp_address {
-            let tcp_listener = TcpListener::bind(*addr)?;
-            debug!("MIO TCP Server will listen on {}", addr);
-            tcp_listeners.push(tcp_listener);
-        }
+        let tcp_listener = TcpListener::bind(server_config.tcp_address)?;
 
-        let mut tls_listeners = Vec::new();
-        if server_config.cert_path.is_some() && server_config.key_path.is_some() {
-            for addr in &server_config.tls_address {
-                let tls_listener = TcpListener::bind(*addr)?;
-                debug!("MIO TLS Server will listen on {}", addr);
-                tls_listeners.push(tls_listener);
+        println!("TCP Server will listen on {}", server_config.tcp_address);
+
+        let tls_listener = if server_config.cert_path.is_some() && server_config.key_path.is_some() {
+            println!("TLS Server will listen on {}", server_config.tls_address);
+            let tls_addr: SocketAddr = parse_listen_address(&server_config.tls_address.to_string()).unwrap();
+            match TcpListener::bind(tls_addr) {
+                Ok(listener) => {
+                    debug!("MIO TLS Server will listen on {}", tls_addr);
+                    Some(listener)
+                }
+                Err(e) => {
+                    debug!("Failed to bind TLS listener: {}", e);
+                    None
+                }
             }
-        }
-        
+        } else {
+            None
+        };
+
         let logical = server_config.num_workers.unwrap_or(30);
 
         let worker_connection_counts = Arc::new(Mutex::new(vec![0; logical]));
@@ -122,9 +123,10 @@ impl MioServer {
             worker_threads.push(worker);
         }
 
+
         Ok(Self {
-            tcp_listeners: tcp_listeners,
-            tls_listeners: tls_listeners,
+            tcp_listener,
+            tls_listener,
             _worker_threads: worker_threads,
             global_queue,
             server_config,
@@ -133,10 +135,7 @@ impl MioServer {
     }
 
     pub fn run(&mut self) -> io::Result<()> {
-        info!(
-            "server_config.server_registration: {:?}",
-            self.server_config.server_registration
-        );
+        info!("server_config.server_registration: {:?}", self.server_config.server_registration);
         if self.server_config.server_registration {
             info!("Registering server with control server...");
             let config_clone = self.server_config.clone();
@@ -163,39 +162,30 @@ impl MioServer {
             }
 
             // Accept TCP connections
-            let mut tcp_connections = Vec::new();
-            for tcp_listener in &self.tcp_listeners {
-                match tcp_listener.accept() {
-                    Ok((stream, addr)) => {
-                        if let Err(e) = stream.set_nodelay(true) {
-                            debug!("Failed to set TCP_NODELAY: {}", e);
-                        }
-                        tcp_connections.push((stream, addr));
+            match self.tcp_listener.accept() {
+                Ok((stream, _addr)) => {
+                    if let Err(e) = stream.set_nodelay(true) {
+                        debug!("Failed to set TCP_NODELAY: {}", e);
                     }
-                    Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                        // Continue
-                    }
-                    Err(e) => {
-                        debug!("Error accepting TCP connection: {}", e);
-                        return Err(e);
-                    }
+                    self.handle_connection(stream, false, _addr)?;
+                }
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                    // Continue
+                }
+                Err(e) => {
+                    debug!("Error accepting TCP connection: {}", e);
+                    return Err(e);
                 }
             }
 
-            // Process accepted TCP connections
-            for (stream, addr) in tcp_connections {
-                self.handle_connection(stream, false, addr)?;
-            }
-
             // Accept TLS connections if listener exists
-            let mut tls_connections = Vec::new();
-            for tls_listener in &self.tls_listeners {
+            if let Some(ref mut tls_listener) = self.tls_listener {
                 match tls_listener.accept() {
-                    Ok((stream, addr)) => {
+                    Ok((stream, _addr)) => {
                         if let Err(e) = stream.set_nodelay(true) {
                             debug!("Failed to set TCP_NODELAY: {}", e);
                         }
-                        tls_connections.push((stream, addr));
+                        self.handle_connection(stream, true, _addr)?;
                     }
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                         // Continue
@@ -207,21 +197,17 @@ impl MioServer {
                 }
             }
 
-            // Process accepted TLS connections
-            for (stream, addr) in tls_connections {
-                self.handle_connection(stream, true, addr)?;
-            }
-
             // Check global queue for stale connections
             self.check_global_queue()?;
 
             thread::sleep(std::time::Duration::from_millis(10));
         }
 
+
         Ok(())
     }
 
-    pub async fn shutdown(&mut self) -> io::Result<()> {
+   pub  async fn shutdown(&mut self) -> io::Result<()> {
         info!("Starting graceful shutdown...");
 
         if self.server_config.server_registration {
@@ -246,12 +232,7 @@ impl MioServer {
         Ok(())
     }
 
-    fn handle_connection(
-        &mut self,
-        stream: TcpStream,
-        is_tls: bool,
-        client_addr: SocketAddr,
-    ) -> io::Result<()> {
+    fn handle_connection(&mut self, stream: TcpStream, is_tls: bool, client_addr: SocketAddr) -> io::Result<()> {
         let connection = if is_tls {
             ConnectionType::Tls(stream, client_addr)
         } else {

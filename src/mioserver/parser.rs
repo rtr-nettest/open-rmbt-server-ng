@@ -2,7 +2,7 @@ use crate::{
     config::FileConfig,
     logger,
     mioserver::{handlers::signed_result::generate_secret_key, server::ServerConfig},
-    tokio_server::{server_config::{parse_listen_addresses_dual_stack}, utils::user},
+    tokio_server::{server_config::parse_listen_address, utils::user},
 };
 use log::LevelFilter;
 
@@ -11,8 +11,8 @@ pub fn parse_args(
     default_config: FileConfig,
 ) -> Result<ServerConfig, anyhow::Error> {
     let mut config = ServerConfig {
-        tcp_address: parse_listen_addresses_dual_stack(&default_config.server_tcp_port).unwrap(),
-        tls_address: parse_listen_addresses_dual_stack(
+        tcp_address: parse_listen_address(&default_config.server_tcp_port).unwrap(),
+        tls_address: parse_listen_address(
             &default_config.server_tls_port.unwrap_or("443".to_string()),
         )
         .unwrap(),
@@ -38,7 +38,7 @@ pub fn parse_args(
             "-l" | "-L" => {
                 i += 1;
                 if i < args.len() {
-                    let addr = parse_listen_addresses_dual_stack(&args[i]).unwrap();
+                    let addr = parse_listen_address(&args[i]).unwrap();
                     if args[i - 1] == "-L" {
                         config.tls_address = addr;
                     } else {
