@@ -9,12 +9,11 @@ mod test_utils;
 /// chunk counts until reaching a maximum, then increasing chunk sizes according to the RMBT protocol.
 
 use tokio::runtime::Runtime;
-use log::{info, debug};
+use log::{debug, trace};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use crate::test_utils::TestServer;
 use std::time::Duration;
 use env_logger;
-use tokio::time::sleep;
 use tokio_tungstenite::tungstenite::{Message};
 use futures_util::{SinkExt, StreamExt};
 
@@ -75,7 +74,7 @@ fn test_handle_get_chunks_r() {
                         total_bytes += n;
                         last_byte = buf[n - 1];
                         
-                        debug!("Read {} bytes, total: {}, last byte: 0x{:02X}", 
+                        trace!("Read {} bytes, total: {}, last byte: 0x{:02X}", 
                                n, total_bytes_read, last_byte);
                         
                         if last_byte == 0xFF {
@@ -189,7 +188,7 @@ async fn test_handle_get_chunks_ws() {
                     total_bytes += n;
                     last_byte = data[n - 1];
                     
-                    debug!("Read {} bytes, total: {}, last byte: 0x{:02X}", 
+                    trace!("Read {} bytes, total: {}, last byte: 0x{:02X}", 
                            n, total_bytes_read, last_byte);
                     
                     if last_byte == 0xFF {

@@ -1,6 +1,6 @@
 use crate::logger;
 use crate::tokio_server::utils::{daemon, user};
-use log::{debug, LevelFilter};
+use log::{debug, LevelFilter, trace};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs;
@@ -240,7 +240,7 @@ impl RmbtServerConfig {
         let cert_path = self.cert_path.as_ref().unwrap();
         debug!("Loading certificates from {}", cert_path);
         let certfile = fs::read(cert_path)?;
-        debug!("Read {} bytes from certificate file", certfile.len());
+        trace!("Read {} bytes from certificate file", certfile.len());
         let mut reader = BufReader::new(certfile.as_slice());
         let certs = rustls_pemfile::certs(&mut reader).collect::<Result<Vec<_>, _>>()?;
         debug!("Successfully parsed {} certificates", certs.len());
@@ -251,7 +251,7 @@ impl RmbtServerConfig {
         let key_path = self.key_path.as_ref().unwrap();
         debug!("Loading private key from {}", key_path);
         let keyfile = fs::read(key_path)?;
-        debug!("Read {} bytes from key file", keyfile.len());
+        trace!("Read {} bytes from key file", keyfile.len());
         let mut reader = BufReader::new(keyfile.as_slice());
 
         // Try to read any private key format
@@ -307,10 +307,15 @@ pub fn parse_listen_address(addr: &str) -> Result<SocketAddr, Box<dyn Error + Se
         return Ok(SocketAddr::new(IpAddr::V4(ip), port));
     }
 
-    // Try port only: 8080
-if let Ok(port) = addr.parse::<u16>() {
-    return Ok(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), port));
+    Err(format!("Invalid listen address format: {}", addr).into())
 }
+
+pub fn parse_listen_addresses_dual_stack(addr: &str) -> Result<Vec<SocketAddr>, Box<dyn Error + Send + Sync>> {
+    if let Ok(port) = addr.parse::<u16>() {
+        let ipv4_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port);
+        let ipv6_addr = SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), port);
+        return Ok(vec![ipv4_addr, ipv6_addr]);
+    }
 
     Err(format!("Invalid listen address format: {}", addr).into())
 }

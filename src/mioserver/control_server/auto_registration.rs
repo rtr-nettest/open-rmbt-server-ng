@@ -31,7 +31,7 @@ pub async fn register_server(config: &ServerConfig) -> Result<()> {
 
     //if hostname isSome and keyPath is some and certPath is some then tlsPort is Some(tls_address.port()) else tlsPort is None
     let tls_port = if config.hostname.is_some() && config.key_path.is_some() && config.cert_path.is_some() {
-        Some(config.tls_address.port() as i32)
+        Some(config.tls_address[0].port() as i32)
     } else {
         None
     };
@@ -39,7 +39,7 @@ pub async fn register_server(config: &ServerConfig) -> Result<()> {
     let request = AutoMeasurementServerRegistrationRequest {
         token: config.registration_token.clone(),
         tls_port,
-        tcp_port: config.tcp_address.port() as i32,
+        tcp_port: config.tcp_address[0].port() as i32,
         version: config.version.clone(),
         hostname: config.hostname.clone(),
         server_name: config.server_name.clone(),
