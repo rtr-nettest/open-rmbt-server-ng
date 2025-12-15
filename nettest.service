@@ -22,7 +22,6 @@ ReadWritePaths=-/var/log/nettest/
 LockPersonality=true
 MemoryDenyWriteExecute=true
 NoNewPrivileges=true
-PrivateUsers=true
 ProtectClock=true
 ProtectControlGroups=true
 ProtectHostname=true
