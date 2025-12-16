@@ -351,7 +351,7 @@ impl Worker {
         let mut buffer = vec![0; 1024];
         let mut result = BytesMut::new();
         let mut loop_flag = false;
-        let timeout = std::time::Duration::from_millis(500);
+        let timeout = std::time::Duration::from_millis(2000);
         let start_time = std::time::Instant::now();
 
         while !loop_flag {
