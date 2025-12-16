@@ -51,34 +51,14 @@
 
 ### Download
 
-Download the latest builds directly:
+Download the latest builds from the [GitHub Releases](https://github.com/specure/nettest/releases) page.
 
-#### Ubuntu
-- **Ubuntu 24.04 x86_64**: [nettest-ubuntu-24-x86_64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-ubuntu-24-x86_64.tar.gz)
-- **Ubuntu 24.04 ARM64**: [nettest-ubuntu-24-aarch64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-ubuntu-24-aarch64.tar.gz)
-- **Ubuntu 22.04 x86_64**: [nettest-ubuntu-22-x86_64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-ubuntu-22-x86_64.tar.gz)
-- **Ubuntu 22.04 ARM64**: [nettest-ubuntu-22-aarch64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-ubuntu-22-aarch64.tar.gz)
-
-#### Debian
-- **Debian 12 (Bookworm) x86_64**: [nettest-debian-12-x86_64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-debian-12-x86_64.tar.gz)
-- **Debian 12 (Bookworm) ARM64**: [nettest-debian-12-aarch64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-debian-12-aarch64.tar.gz)
-- **Debian 11 (Bullseye) x86_64**: [nettest-debian-11-x86_64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-debian-11-x86_64.tar.gz)
-- **Debian 11 (Bullseye) ARM64**: [nettest-debian-11-aarch64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-debian-11-aarch64.tar.gz)
-
-#### macOS
-- **macOS Apple Silicon**: [nettest-macos-aarch64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-macos-aarch64.tar.gz)
-- **macOS Intel**: [nettest-macos-x86_64.tar.gz](https://github.com/specure/nettest/releases/download/latest/nettest-macos-x86_64.tar.gz)
-
-#### Windows
-- **Windows x86_64**: [nettest-windows-x86_64.zip](https://github.com/specure/nettest/releases/download/latest/nettest-windows-x86_64.zip)
-- **Windows ARM64**: [nettest-windows-aarch64.zip](https://github.com/specure/nettest/releases/download/latest/nettest-windows-aarch64.zip)
-
-> **Note**: 
+> **Note**:
 > 1. Download the appropriate archive for your architecture and distribution
-> 2. Extract: 
+> 2. Extract:
 >    - Linux/macOS: `tar -xzf nettest-<distribution>-<arch>.tar.gz`
 >    - Windows: Extract the ZIP file
-> 3. Run: 
+> 3. Run:
 >    - Linux/macOS: `./nettest -s` (server) or `./nettest -c <address>` (client)
 >    - Windows: `nettest.exe -s` (server) or `nettest.exe -c <address>` (client)
 
