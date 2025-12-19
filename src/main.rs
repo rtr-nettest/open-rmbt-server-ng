@@ -45,12 +45,21 @@ async fn main() -> Result<(), Box<dyn StdError + Send + Sync>> {
         mio_server.shutdown().await?;
         info!("Server stopped");
     } else {
-        if args[1] != "-h" && args[1] != "--help" {
-            println!("Invalid initial arguments");
+        let is_help = args[1] == "-h" || args[1] == "--help";
+        if !is_help {
+            eprintln!("Error: Invalid argument '{}'\n", args[1]);
         }
-        println!("Usage: nettest -s [options] or nettest -c [options]");
-        println!("Run ./nettest without arguments to automatically find nearest server and run measurement against it");
-        println!("For more information, use 'nettest -c -h' or 'nettest -s -h'");
+        println!("nettest - Network speed measurement tool\n");
+        println!("USAGE:");
+        println!("    nettest              Run client with auto-discovered server");
+        println!("    nettest -c [OPTIONS] Run as client");
+        println!("    nettest -s [OPTIONS] Run as server\n");
+        println!("For detailed help:");
+        println!("    nettest -c -h        Show client options");
+        println!("    nettest -s -h        Show server options");
+        if !is_help {
+            std::process::exit(1);
+        }
     }
     Ok(())
 }

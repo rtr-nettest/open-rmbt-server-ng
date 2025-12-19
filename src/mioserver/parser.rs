@@ -90,14 +90,12 @@ pub fn parse_args(
             }
             "--help" | "-h" => {
                 print_help();
-                return Err(anyhow::anyhow!("Help printed"));
+                std::process::exit(0);
             }
             _ => {
+                eprintln!("Error: Unknown option '{}'\n", args[i]);
                 print_help();
-                return Err(anyhow::anyhow!(
-                    "Unknown option: {}, use -h for help",
-                    args[i]
-                ));
+                std::process::exit(1);
             }
         }
         i += 1;
@@ -113,23 +111,27 @@ pub fn parse_args(
 }
 
 fn print_help() {
-    println!("==== Nettest Server ====");
-    println!("By default, rmbtd will listen TCP on port 5005");
-    println!("Usage: 'nettest -s' will listen on TCP on port 5005");
-    println!("Usage: 'nettest -s -k privkey1.pem -c fullchain1.pem'  will listen on TCP and TLS on ports 5005 and 443");
-    println!("Usage: nettest -s [-l <listen_address>] [-c <cert_path>] [-k <key_path>] [-t <num_threads>] [-u <user>] [-d] [-w] [-v <version>]");
-    println!("command line arguments:\n");
-    println!(" -l/-L  listen on (IP and) port; -L for SSL; default port is 5005, 443 for TLS");
-    println!("        examples: \"443\",\"1.2.3.4:1234\",\"[2001:1234::567A]:1234\"");
-    println!(" -c     path to SSL certificate in PEM format;");
-    println!("        intermediate certificates following server cert in same file if needed");
-    println!("        required for TLS\n");
-    println!(" -k     path to SSL key file in PEM format; required for TLS\n");
-    println!(" -u     drop root privileges and setuid to specified user; must be root\n");
-    println!(" -d     fork into background as daemon (no argument)\n");
-    println!(" -log    log level: info, debug, trace\n");
-    println!(" -register  enable server registration\n");
-    println!(" -mdns  enable mDNS service discovery for local network\n");
-    println!("--help - print help");
-    println!("-h - print help");
+    println!("nettest - Network speed measurement server\n");
+    println!("USAGE:");
+    println!("    nettest -s [OPTIONS]\n");
+    println!("EXAMPLES:");
+    println!("    nettest -s                                   Start TCP server on port 5005");
+    println!("    nettest -s -k key.pem -c cert.pem            Start TCP + TLS server");
+    println!("    nettest -s -l 8080 -L 8443                   Custom ports for TCP and TLS");
+    println!("    nettest -s -d -u nobody                      Run as daemon with user 'nobody'\n");
+    println!("OPTIONS:");
+    println!("    -l ADDRESS      TCP listen address (default: 0.0.0.0:5005)");
+    println!("                    Examples: \"5005\", \"192.168.1.1:5005\", \"[::]:5005\"");
+    println!("    -L ADDRESS      TLS listen address (default: 0.0.0.0:443)");
+    println!("                    Examples: \"443\", \"192.168.1.1:443\", \"[::]:443\"");
+    println!("    -c PATH         Path to SSL certificate in PEM format (required for TLS)");
+    println!("                    Include intermediate certs in same file if needed");
+    println!("    -k PATH         Path to SSL private key in PEM format (required for TLS)");
+    println!("    -t THREADS      Number of worker threads");
+    println!("    -u USER         Drop privileges and run as specified user (requires root)");
+    println!("    -d              Run as daemon in background");
+    println!("    -log LEVEL      Set log level: info, debug, trace");
+    println!("    -register       Enable server registration with control server");
+    println!("    -mdns           Enable mDNS service discovery for local network");
+    println!("    -h, --help      Show this help message");
 }
