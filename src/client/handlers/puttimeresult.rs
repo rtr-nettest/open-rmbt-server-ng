@@ -90,7 +90,6 @@ pub fn handle_put_time_result_receive_time(
             measurement_state.read_pos = 0;
             measurement_state.write_pos = 0;
             measurement_state.time_result_buffer.clear();
-            debug!("PerfCompleted");
             return Ok(n);
         }
     }
@@ -153,7 +152,6 @@ pub fn handle_put_time_result_send_chunks(
                 let is_last = tt >= TEST_DURATION_NS as u128;
 
                 if is_last {
-                    debug!("is_last");
                     measurement_state.phase = TestPhase::PerfSendLastChunk;
                     measurement_state.stream.reregister(
                         &poll,
