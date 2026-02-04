@@ -18,8 +18,6 @@ pub fn handle_get_time_send_chunk(poll: &Poll, state: &mut TestState) -> io::Res
         state.clock = Some(Instant::now());
     }
 
-    let is_last = state.clock.unwrap().elapsed().as_nanos() > duration as u128 * 1000000000;
-
    let chunk = CHUNK_STORAGE.get(&(chunk_size as u64)).unwrap_or_else(|| {
         if state.chunk.is_none() {
             let chunk = get_chunk(chunk_size as u64, false);
@@ -32,9 +30,10 @@ pub fn handle_get_time_send_chunk(poll: &Poll, state: &mut TestState) -> io::Res
         state.write_pos += n;
         state.total_bytes_sent += n as u64;
         if state.write_pos == chunk.len() {
-            debug!("handle_get_time_send_chunk token {:?}", state.token);
+            trace!("handle_get_time_send_chunk token {:?}", state.token);
+            
             state.write_pos = 0;
-            if is_last {
+            if state.clock.unwrap().elapsed().as_nanos() > duration as u128 * 1000000000 {
                 debug!("is_last");
                 state.measurement_state = ServerTestPhase::GetTimeSendLastChunk;
                 state.read_pos = 0;
@@ -49,6 +48,7 @@ pub fn handle_get_time_send_chunk(poll: &Poll, state: &mut TestState) -> io::Res
                 )?;
                 return Ok(n);
             }
+
         }
     }
 }

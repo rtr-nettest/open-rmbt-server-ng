@@ -1,7 +1,8 @@
 use crate::client::state::TestPhase;
 use crate::client::constants::{
-    ACCEPT_GETCHUNKS_STRING, MAX_CHUNKS_BEFORE_SIZE_INCREASE, get_max_chunk_size, OK_COMMAND,
+    ACCEPT_GETCHUNKS_STRING, MAX_CHUNKS_BEFORE_SIZE_INCREASE, OK_COMMAND,
     PRE_DOWNLOAD_DURATION_NS,
+    get_max_chunk_size,
 };
 use crate::client::state::MeasurementState;
 use anyhow::Result;
