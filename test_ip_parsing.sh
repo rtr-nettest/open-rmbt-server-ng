@@ -6,7 +6,6 @@ echo "=== Тест парсинга IP адресов ==="
 
 # Тестовые данные (имитируем HOSTS_CONF_ENV)
 HOSTS_CONF_ENV='139.162.150.114
-  default_mode = "server"
   server_tcp_port = 8080
   server_workers = "50"
   server_tls_port = 443
@@ -23,7 +22,6 @@ HOSTS_CONF_ENV='139.162.150.114
 ---
 
 10.35.2.151
-  default_mode = "server"
   server_tcp_port = 8080
   server_workers = "50"
   server_tls_port = 443

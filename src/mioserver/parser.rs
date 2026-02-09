@@ -1,28 +1,35 @@
 use crate::{
-    config::FileConfig, logger, mioserver::{handlers::signed_result::generate_secret_key, server::ServerConfig}, tokio_server::{server_config::parse_listen_address, utils::user}
+    config::FileConfig,
+    logger,
+    mioserver::{handlers::signed_result::generate_secret_key, server::ServerConfig},
+    tokio_server::{ utils::user},
+    config::parser::parse_listen_address,
 };
+use log::LevelFilter;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 pub fn parse_args(
     args: Vec<String>,
     default_config: FileConfig,
 ) -> Result<ServerConfig, anyhow::Error> {
     let mut config = ServerConfig {
-        tcp_address: parse_listen_address(&default_config.server_tcp_port).unwrap(),
-        tls_address: parse_listen_address(&default_config.server_tls_port.unwrap_or("443".to_string())).unwrap(),
+        tcp_addresses: vec![],
+        tls_addresses: vec![],
         cert_path: default_config.cert_path,
         key_path: default_config.key_path,
-        num_workers: default_config.server_workers, 
+        num_workers: default_config.server_workers,
         user: default_config.user,
         daemon: default_config.daemonize,
         version: Some("2.0.0".to_string()),
         secret_key: generate_secret_key(),
-        log_level: None,
+        log_level: Some(default_config.logger),
         server_registration: default_config.server_registration,
         control_server: default_config.control_server,
         hostname: default_config.hostname,
         x_nettest_client: default_config.x_nettest_client,
         registration_token: default_config.registration_token,
         server_name: default_config.server_name,
+        enable_mdns: false,
     };
 
     let mut i = 1;
@@ -33,9 +40,9 @@ pub fn parse_args(
                 if i < args.len() {
                     let addr = parse_listen_address(&args[i]).unwrap();
                     if args[i - 1] == "-L" {
-                        config.tls_address = addr;
+                        config.tls_addresses.push(addr);
                     } else {
-                        config.tcp_address = addr;
+                        config.tcp_addresses.push(addr);
                     }
                 }
             }
@@ -77,41 +84,85 @@ pub fn parse_args(
             "-register" => {
                 config.server_registration = true;
             }
+            "-mdns" => {
+                config.enable_mdns = true;
+            }
             "--help" | "-h" => {
                 print_help();
-                return Err(anyhow::anyhow!("Help printed"));
+                std::process::exit(0);
             }
             _ => {
-                return Err(anyhow::anyhow!("Unknown option: {}", args[i]));
+                eprintln!("Error: Unknown option '{}'\n", args[i]);
+                print_help();
+                std::process::exit(1);
             }
         }
         i += 1;
     }
-    if config.log_level.is_some() {
+    if config.log_level.is_some() && config.log_level.unwrap() != LevelFilter::Off {
+        println!(
+            "Initializing logger with level: {:?}",
+            config.log_level.unwrap()
+        );
         logger::init_logger(config.log_level.unwrap()).unwrap();
+    }
+
+    //add default addresses if args were not provided
+    if config.tcp_addresses.is_empty() {
+        config.tcp_addresses.push(SocketAddr::new(
+            IpAddr::V6(Ipv6Addr::UNSPECIFIED),
+            default_config.server_tcp_port.parse().unwrap(),
+        ));
+        config.tcp_addresses.push(SocketAddr::new(
+            IpAddr::V4(Ipv4Addr::UNSPECIFIED),
+            default_config.server_tcp_port.parse().unwrap(),
+        ));
+    }
+    if config.tls_addresses.is_empty() {
+        //keep this order to avoid conflicts with IPv4 addresses on unix
+        config.tls_addresses.push(SocketAddr::new(
+            IpAddr::V6(Ipv6Addr::UNSPECIFIED),
+            default_config
+                .server_tls_port
+                .clone()
+                .unwrap_or("443".to_string())
+                .parse()
+                .unwrap(),
+        ));
+        config.tls_addresses.push(SocketAddr::new(
+            IpAddr::V4(Ipv4Addr::UNSPECIFIED),
+            default_config
+                .server_tls_port
+                .unwrap_or("443".to_string())
+                .parse()
+                .unwrap(),
+        ));
     }
     Ok(config)
 }
 
-
-
 fn print_help() {
-    println!("==== Nettest Server ====");
-    println!("By default, rmbtd will listen TCP on port 5005");
-    println!("Usage: 'nettest -s' will listen on TCP on port 5005");
-    println!("Usage: 'nettest -s -k privkey1.pem -c fullchain1.pem'  will listen on TCP and TLS on ports 5005 and 443");
-    println!("Usage: nettest -s [-l <listen_address>] [-c <cert_path>] [-k <key_path>] [-t <num_threads>] [-u <user>] [-d] [-D] [-w] [-v <version>]");
-    println!("command line arguments:\n");
-    println!(" -l/-L  listen on (IP and) port; -L for SSL; default port is 5005, 443 for TLS");
-    println!("        examples: \"443\",\"1.2.3.4:1234\",\"[2001:1234::567A]:1234\"");
-    println!(" -c     path to SSL certificate in PEM format;");
-    println!("        intermediate certificates following server cert in same file if needed");
-    println!("        required\n");
-    println!(" -k     path to SSL key file in PEM format; required\n");
-    println!(" -t     number of worker threads to run for handling connections (default: 200)\n");
-    println!(" -u     drop root privileges and setuid to specified user; must be root\n");
-    println!(" -d     fork into background as daemon (no argument)\n");
-    println!(" -log    log level: info, debug, trace\n");
-    println!(" -e     encryption key for resut signature\n");
-    println!(" -register  enable server registration\n");
+    println!("nettest - Network speed measurement server\n");
+    println!("USAGE:");
+    println!("    nettest -s [OPTIONS]\n");
+    println!("EXAMPLES:");
+    println!("    nettest -s                                   Start TCP server on port 5005");
+    println!("    nettest -s -k key.pem -c cert.pem            Start TCP + TLS server");
+    println!("    nettest -s -l 8080 -L 8443                   Custom ports for TCP and TLS");
+    println!("    nettest -s -d -u nobody                      Run as daemon with user 'nobody'\n");
+    println!("OPTIONS:");
+    println!("    -l ADDRESS      TCP listen address (default: 0.0.0.0:5005)");
+    println!("                    Examples: \"5005\", \"192.168.1.1:5005\", \"[::]:5005\"");
+    println!("    -L ADDRESS      TLS listen address (default: 0.0.0.0:443)");
+    println!("                    Examples: \"443\", \"192.168.1.1:443\", \"[::]:443\"");
+    println!("    -c PATH         Path to SSL certificate in PEM format (required for TLS)");
+    println!("                    Include intermediate certs in same file if needed");
+    println!("    -k PATH         Path to SSL private key in PEM format (required for TLS)");
+    println!("    -t THREADS      Number of worker threads");
+    println!("    -u USER         Drop privileges and run as specified user (requires root)");
+    println!("    -d              Run as daemon in background");
+    println!("    -log LEVEL      Set log level: info, debug, trace");
+    println!("    -register       Enable server registration with control server");
+    println!("    -mdns           Enable mDNS service discovery for local network");
+    println!("    -h, --help      Show this help message");
 }

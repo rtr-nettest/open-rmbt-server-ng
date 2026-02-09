@@ -1,0 +1,49 @@
+[Unit]
+Description=Advanced network measurement tool
+After=network.target
+Documentation=https://github.com/specure/nettest/wiki
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/nettest -s
+TimeoutStopSec=0
+Restart=always
+#User=nettest
+#Group=nettest
+
+UMask=007
+LimitNOFILE=65535
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=-/var/log/nettest/
+
+# Some security features
+LockPersonality=true
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+RemoveIPC=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~ @privileged @resources
+
+# This restricts this service from executing binaries other than nettest
+# itself. This is really effective at e.g. making it impossible to an
+# attacker to spawn a shell on the system
+NoExecPaths=/sbin/ /bin/ /usr/sbin/
+ExecPaths=/usr/bin/nettest
+
+[Install]
+WantedBy=multi-user.target
+Alias=nettest.service

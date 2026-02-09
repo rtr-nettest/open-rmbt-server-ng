@@ -51,7 +51,6 @@ jobs:
         # Создаем локальный конфиг для тестов
         cat > nettest.conf << 'EOF'
         # Nettest Configuration File for CI/CD
-        default_mode = "client"
         server_tcp_port = 5005
         client_use_tls = false
         client_use_websocket = false
@@ -72,7 +71,6 @@ jobs:
         sudo mkdir -p /etc
         sudo tee /etc/nettest.conf > /dev/null << 'EOF'
         # Nettest Configuration File for CI/CD
-        default_mode = "client"
         server_tcp_port = 5005
         client_use_tls = false
         client_use_websocket = false

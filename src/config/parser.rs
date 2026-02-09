@@ -1,13 +1,13 @@
-
 use log::LevelFilter;
 
-use crate::config::{App, FileConfig};
+use crate::config::FileConfig;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::error::Error;
 
-
-pub fn read_config_file() -> FileConfig {
+pub fn read_config_file() -> Result<FileConfig, anyhow::Error> {
+    use std::env;
     use std::fs;
     use std::path::PathBuf;
-    use std::env;
 
     // Determine config file path based on OS
     let config_path = if cfg!(target_os = "macos") {
@@ -58,7 +58,7 @@ pub fn read_config_file() -> FileConfig {
     parse_config_content(&config_content)
 }
 
-fn parse_config_content(content: &str) -> FileConfig {
+fn parse_config_content(content: &str) -> Result<FileConfig, anyhow::Error> {
     let mut config = FileConfig::default();
 
     for line in content.lines() {
@@ -73,13 +73,6 @@ fn parse_config_content(content: &str) -> FileConfig {
             let value = value.trim().trim_matches('"');
 
             match key {
-                "default_mode" => {
-                    if value == "server" {
-                        config.app = App::Server;
-                    } else {
-                        config.app = App::Client;
-                    }
-                }
                 "server_tcp_port" => {
                     if let Ok(port) = value.parse::<u16>() {
                         config.server_tcp_port = port.to_string();
@@ -132,6 +125,9 @@ fn parse_config_content(content: &str) -> FileConfig {
                         config.logger = LevelFilter::Debug;
                     } else if value == "trace" {
                         config.logger = LevelFilter::Trace;
+                    } else {
+                        println!("Unknown logger level: {}, using default", value);
+                        return Err(anyhow::anyhow!("Unknown logger level: {}", value));
                     }
                 }
                 "server_registration" => {
@@ -156,12 +152,83 @@ fn parse_config_content(content: &str) -> FileConfig {
                 "signed_result" => {
                     config.signed_result = value.parse().unwrap_or(false);
                 }
+                "enable_mdns" => {
+                    if value == "true" {
+                        config.enable_mdns = true;
+                    } else {
+                        config.enable_mdns = false;
+                    }
+                }
+                "max_chunk_size" => {
+                    if let Ok(size) = value.parse::<u32>() {
+                        config.max_chunk_size = Some(size);
+                    } else {
+                        println!("Warning: Invalid max_chunk_size value: {}, using default", value);
+                    }
+                }
                 _ => {
+                    //return error
                     println!("Warning: Unknown config key: {}", key);
+                    return Err(anyhow::anyhow!("Unknown config key: {}", key));
                 }
             }
         }
     }
 
-    config
+    Ok(config)
+}
+
+pub fn parse_listen_address(addr: &str) -> Result<SocketAddr, Box<dyn Error + Send + Sync>> {
+    let addr = addr.trim();
+
+    // Try parsing as SocketAddr first (handles IPv4:port and [IPv6]:port)
+    if let Ok(socket_addr) = addr.parse::<SocketAddr>() {
+        return Ok(socket_addr);
+    }
+
+    // Try IPv6 format with brackets: [::1]:8080 or [fe80::1706:fb83:8249:73d0]:334
+    if addr.starts_with('[') {
+        if let Some(end_bracket) = addr.rfind(']') {
+            let ip_str = &addr[1..end_bracket];
+            if let Some(port_str) = addr[end_bracket + 1..].strip_prefix(':') {
+                if let Ok(ip) = ip_str.parse::<Ipv6Addr>() {
+                    if let Ok(port) = port_str.parse::<u16>() {
+                        return Ok(SocketAddr::new(IpAddr::V6(ip), port));
+                    }
+                }
+            }
+        }
+    }
+
+    // Try IPv4 format: 127.0.0.1:8080
+    if let Some((ip_str, port_str)) = addr.split_once(':') {
+        if let Ok(ip) = ip_str.parse::<Ipv4Addr>() {
+            if let Ok(port) = port_str.parse::<u16>() {
+                return Ok(SocketAddr::new(IpAddr::V4(ip), port));
+            }
+        }
+    }
+
+    // Try IPv6 format without brackets: ::1:8080 (less common, but valid in some contexts)
+    // Count colons to detect IPv6
+    let colon_count = addr.matches(':').count();
+    if colon_count > 1 {
+        // Likely IPv6, try to parse
+        if let Some((ip_str, port_str)) = addr.rsplit_once(':') {
+            // Check if port_str is a valid port number
+            if let Ok(port) = port_str.parse::<u16>() {
+                // Try parsing the rest as IPv6
+                if let Ok(ip) = ip_str.parse::<Ipv6Addr>() {
+                    return Ok(SocketAddr::new(IpAddr::V6(ip), port));
+                }
+            }
+        }
+    }
+
+    //try port only
+    if let Ok(port) = addr.parse::<u16>() {
+        return Ok(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), port));
+    }
+
+    Err(format!("Invalid listen address format: {}", addr).into())
 }

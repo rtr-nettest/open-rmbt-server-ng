@@ -91,10 +91,12 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
             }
             "--help" | "-h" => {
                 print_help();
-                return Err(anyhow::anyhow!("Help printed"));
+                std::process::exit(0);
             }
             _ => {
-                return Err(anyhow::anyhow!("Unknown option: {}", args[i]));
+                eprintln!("Error: Unknown option '{}'\n", args[i]);
+                print_help();
+                std::process::exit(1);
             }
         }
         i += 1;
@@ -107,8 +109,7 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
         debug!("No server address provided, using default");
         //TODO: verify tls
         let server = get_best_measurement_server(&config.x_nettest_client, &config.control_server).await?.ok_or_else(|| {
-            println!("No server found, using default");
-            anyhow::anyhow!("No server found")
+            anyhow::anyhow!("No server found. Probably no running servers of version 2.0.0 or higher")
         })?;
         let address = if server.web_address.is_empty() {
             server.ip_address.unwrap()
@@ -131,20 +132,25 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
 
 
 pub fn print_help() {
-    println!("==== Nettest Client ====");
-    println!("Usage: nettest -c <server_address> [-t<num_threads>] [-ws] [-tls] ");
-    println!("By default, nettest will connect to server on port :5005 for TCP or :443 fot TLS");
-    println!("Usage: nettest -c 127.0.0.1 -ws -tls -t5");
-    println!("-ws - use websocket");
-    println!("-tls - use tls");
-    println!("-log - `RUST_LOG=debug ./nettest 127.0.0.1  -t5 -tls -log`");
-    println!("-t<num_threads> - number of threads");
-    println!("-raw - output results in parseable format (ping/download/upload)");
-    println!("-help - print help");
-    println!("-h - print help");
-    println!("-g - print graphs");
-    println!("-p - port");
-    println!("-e - encryption key");
-    println!("-h - print help");
-    println!("-h - print help");
+    println!("nettest - Network speed measurement client\n");
+    println!("USAGE:");
+    println!("    nettest                          Auto-discover server and run test");
+    println!("    nettest -c [SERVER] [OPTIONS]    Connect to specific server\n");
+    println!("EXAMPLES:");
+    println!("    nettest                          Find nearest server automatically");
+    println!("    nettest -c 192.168.1.100         Connect to server at 192.168.1.100");
+    println!("    nettest -c example.com -tls      Connect using TLS encryption");
+    println!("    nettest -c example.com -tls -ws  Connect using TLS over WebSocket\n");
+    println!("OPTIONS:");
+    println!("    -c [SERVER]     Run as client, optionally specify server address");
+    println!("    -p PORT         Server port (default: 5005 for TCP, 443 for TLS)");
+    println!("    -t THREADS      Number of parallel threads (default: from config)");
+    println!("    -tls            Use TLS encryption");
+    println!("    -ws             Use WebSocket protocol");
+    println!("    -g              Display download/upload graphs");
+    println!("    -raw            Output results in parseable format: ping/download/upload");
+    println!("    -save           Save results to control server");
+    println!("    -signed         Request signed result from server");
+    println!("    -log LEVEL      Set log level: info, debug, trace");
+    println!("    -h, --help      Show this help message");
 }

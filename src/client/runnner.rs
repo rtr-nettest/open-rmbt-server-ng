@@ -1,9 +1,9 @@
 use std::{
-    net::SocketAddr,
     sync::{Arc, Barrier},
     thread,
 };
 
+use crate::config::parser::parse_listen_address;
 use std::sync::Mutex;
 
 use log::debug;
@@ -44,10 +44,12 @@ pub async fn run_threads(
 
     debug!("Resolved IP: {}", ip);
 
+    debug!("config.port: {}, config.tls_port: {}", config.port, config.tls_port);
+
     let addr = if !config.use_tls {
-        format!("{}:{}", ip, config.port).parse::<SocketAddr>()?
+        parse_listen_address(&format!("{}:{}", ip, config.port)).unwrap()
     } else {
-        format!("{}:{}", ip, config.tls_port).parse::<SocketAddr>()?
+        parse_listen_address(&format!("{}:{}", ip, config.tls_port)).unwrap()
     };
 
     for i in 0..config.thread_count {
@@ -70,7 +72,8 @@ pub async fn run_threads(
             match greeting {
                 Ok(_) => {}
                 Err(e) => {
-                    debug!("Greeting error: {:?} token: {}", e, i);
+                    println!("Thread {i} could not connect to the server. {:?}", e);
+                    return Err(anyhow::anyhow!("Greeting failed with error: {:?}", e));
                 }
             }
             barrier.wait();
@@ -88,7 +91,7 @@ pub async fn run_threads(
                 if config.raw_output {
                     print!("{:.2}", ping_ms);
                 } else {
-                    print_float_result("Ping Median", "ms", Some(ping_ms));
+                    print_float_result("Ping Median", "ms", Some(ping_ms), false);
                 }
             }
             barrier.wait();
@@ -119,7 +122,7 @@ pub async fn run_threads(
                 if config.raw_output {
                     print!("/{:.2}", speed.1); // speed.1 is Gbps
                 } else {
-                    print_test_result("Download Test", "Completed", Some(speed));
+                    print_test_result("Download Test", "Completed", Some(speed), false);
                 }
             }
 
@@ -151,7 +154,7 @@ pub async fn run_threads(
                 if config.raw_output {
                     println!("/{:.2}", speed.1); // speed.1 is Gbps, println! for line break
                 } else {
-                    print_test_result("Upload Test", "Completed", Some(speed));
+                    print_test_result("Upload Test", "Completed", Some(speed), true);
                 }
             }
 
@@ -203,7 +206,7 @@ pub async fn run_threads(
         .collect();
 
     if state_refs.len() != config.thread_count {
-        println!("Failed threads: {}", config.thread_count - state_refs.len());
+        println!("Failed threads: {} out of {}", config.thread_count - state_refs.len(), config.thread_count);
     }
 
     // Save results if -save option is enabled
