@@ -6,7 +6,7 @@ use std::{
 use crate::config::parser::parse_listen_address;
 use std::sync::Mutex;
 
-use log::debug;
+use log::{debug, info};
 
 use crate::client::{
     calculator::{
@@ -44,7 +44,10 @@ pub async fn run_threads(
 
     debug!("Resolved IP: {}", ip);
 
-    debug!("config.port: {}, config.tls_port: {}", config.port, config.tls_port);
+    debug!(
+        "config.port: {}, config.tls_port: {}",
+        config.port, config.tls_port
+    );
 
     let addr = if !config.use_tls {
         parse_listen_address(&format!("{}:{}", ip, config.port)).unwrap()
@@ -128,7 +131,11 @@ pub async fn run_threads(
 
             barrier.wait();
 
-            state.run_perf_test().unwrap();
+            if config.legacy {
+                state.run_put().unwrap();
+            } else {
+                state.run_perf_test().unwrap();
+            }
             {
                 let mut stats = stats.lock().unwrap();
                 stats.upload_measurements.push(
@@ -168,6 +175,7 @@ pub async fn run_threads(
             let result: Measurement = Measurement {
                 thread_id: i,
                 failed: state.measurement_state().failed,
+                phase: state.measurement_state().phase.clone(),
                 measurements: state
                     .measurement_state()
                     .download_measurements
@@ -193,6 +201,12 @@ pub async fn run_threads(
         .map(|s| s.unwrap())
         .collect();
 
+    for s in states.iter() {
+        if s.failed {
+            info!("Failed thread {} on phase {:?}", s.thread_id, s.phase);
+        }
+    }
+
     let state_refs: Vec<Measurement> = states
         .iter()
         //TODO whar to do on failed threads?
@@ -200,14 +214,11 @@ pub async fn run_threads(
         .cloned()
         .collect();
 
-    let envelopes: Vec<Option<String>> = state_refs
-        .iter()
-        .map(|s| s.envelope.clone())
-        .collect();
-
     if state_refs.len() != config.thread_count {
         println!("Failed threads: {} out of {}", config.thread_count - state_refs.len(), config.thread_count);
     }
+
+    let envelopes: Vec<Option<String>> = state_refs.iter().map(|s| s.envelope.clone()).collect();
 
     // Save results if -save option is enabled
     if config.save_results {
