@@ -69,12 +69,9 @@ pub fn handle_put_time_result_receive_time(
                 
                 trace!("Parsed {} time-bytes pairs: {:?}", pairs.len(), pairs);
                 
-                // Add all pairs to upload_measurements
                 for (time, bytes) in &pairs {
                     measurement_state.upload_measurements.push_back((*time, *bytes));
                 }
-                
-                // Set final results (last pair)
                 if let Some((last_time, last_bytes)) = pairs.last() {
                     measurement_state.upload_time = Some(*last_time);
                     measurement_state.upload_bytes = Some(*last_bytes);
@@ -126,8 +123,7 @@ pub fn handle_put_time_result_send_chunks(
     poll: &Poll,
     measurement_state: &mut MeasurementState,
 ) -> Result<usize, std::io::Error> {
-    debug!("handle_put_time_result_send_chunks token {:?}", measurement_state.token);
-    // debug!("handle_perf_send_chunks token {:?}", measurement_state.token);
+    trace!("handle_put_time_result_send_chunks token {:?}", measurement_state.token);
     if measurement_state.phase_start_time.is_none() {
         measurement_state.write_pos = 0;
         measurement_state.phase_start_time = Some(Instant::now());
@@ -174,7 +170,7 @@ pub fn handle_put_time_result_send_last_chunk(
     poll: &Poll,
     measurement_state: &mut MeasurementState,
 ) -> Result<usize, std::io::Error> {
-    // debug!("handle_perf_send_last_chunk token {:?}", measurement_state.token);
+    debug!("handle_perf_send_last_chunk token {:?}", measurement_state.token);
     let buffer = CHUNK_TERMINATION_STORAGE
         .get(&(measurement_state.chunk_size as u64))
         .unwrap();
@@ -195,31 +191,3 @@ pub fn handle_put_time_result_send_last_chunk(
         }
     }
 }
-
-pub fn calculate_upload_speed(bytes: u64, time_ns: u64) -> f64 {
-    // Convert nanoseconds to seconds, ensuring we don't lose precision
-    let time_seconds = if time_ns > u64::MAX / 1_000_000_000 {
-        // If time_ns is very large, divide first to avoid overflow
-        (time_ns / 1_000_000_000) as f64 + (time_ns % 1_000_000_000) as f64 / 1_000_000_000.0
-    } else {
-        time_ns as f64 / 1_000_000_000.0
-    };
-    let speed_bps: f64 = bytes as f64 / time_seconds; // Convert to bytes per second
-    debug!("Upload speed calculation:");
-    debug!("  Total bytes sent: {}", bytes);
-    debug!(
-        " Total bytes sent GB: {}",
-        bytes as f64 / (1024.0 * 1024.0 * 1024.0)
-    );
-    debug!("  Total time: {:.9} seconds ({} ns)", time_seconds, time_ns);
-    debug!(
-        "  Speed: {:.2} MB/s ({:.2} GB/s)  GBit/s: {}  Mbit/s: {}",
-        speed_bps / (1024.0 * 1024.0),
-        speed_bps / (1024.0 * 1024.0 * 1024.0),
-        speed_bps * 8.0 / (1024.0 * 1024.0 * 1024.0),
-        speed_bps * 8.0 / (1024.0 * 1024.0)
-    );
-    speed_bps
-}
-
-

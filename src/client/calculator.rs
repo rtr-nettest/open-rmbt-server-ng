@@ -1,6 +1,5 @@
 use crate::client::{client::Measurement};
 
-
 pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> (f64, f64, f64) {
     if measurements.is_empty() {
         return (0.0, 0.0, 0.0);
@@ -28,7 +27,6 @@ pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> 
 
     // t* accounting for skipping first 2 seconds
     let t_star = t_star_original - skip_time_ns;
-    
     // If after skipping 2 seconds time is insufficient, return 0
     if t_star <= 0 {
         return (0.0, 0.0, 0.0);
@@ -41,6 +39,7 @@ pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> 
         if thread_measurements.is_empty() {
             continue;
         }
+
 
         // Interpolate data at start (after skipping 2 seconds)
         let bytes_at_start = interpolate_bytes_at_time(&thread_measurements, min_start_time + skip_time_ns);
@@ -62,6 +61,7 @@ pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> 
             // If first measurement already >= t_star, interpolate from start
             interpolate_bytes_at_time(&thread_measurements, min_start_time + skip_time_ns + t_star)
         } else if l_k < thread_measurements.len() {
+
             // Interpolation between two points
             let (t_lk_minus_1, b_lk_minus_1) = thread_measurements[l_k - 1];
             let (t_lk, b_lk) = thread_measurements[l_k];
@@ -89,7 +89,6 @@ pub fn calculate_speed_from_measurements(measurements: Vec<Vec<(u64, u64)>>) -> 
     let speed_bps = (total_bytes * 8.0) / (t_star as f64 / 1_000_000_000.0);
     let speed_gbps = speed_bps / 1_000_000_000.0;
     let speed_mbps = speed_bps / 1_000_000.0;
-
     (speed_bps, speed_gbps, speed_mbps)
 }
 

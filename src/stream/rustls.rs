@@ -75,14 +75,28 @@ impl RustlsStream {
         })
     }
 
-    pub fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+    pub fn from_connection(conn: ClientConnection, stream: TcpStream) -> Self {
+        Self {
+            conn,
+            stream,
+            handshake_done: true,
+            finished: true,
+            temp_buf: Vec::new(),
+        }
+    }
+
+    pub fn get_mut(&mut self) -> &mut TcpStream {
+        &mut self.stream
+    }
+
+    fn read_inner(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         // trace!("Reading from RustlsStream");
         if self.temp_buf.len() > buf.len() {
 
             let to_copy = buf.len().min(self.temp_buf.len());
             buf[..to_copy].copy_from_slice(&self.temp_buf[..to_copy]);
             self.temp_buf.drain(..to_copy);
-            debug!("Left {} bytes in temp_buf", self.temp_buf.len());
+            trace!("Left {} bytes in temp_buf", self.temp_buf.len());
             return Ok(to_copy);
         } 
 
@@ -96,7 +110,6 @@ impl RustlsStream {
                 if self.conn.wants_write() {
                     self.conn.write_tls(&mut self.stream)?;
                 }
-                debug!("WouldBlock 1");
                 if self.temp_buf.len() > 0 {
                     let to_copy = buf.len().min(self.temp_buf.len());
                     buf[..to_copy].copy_from_slice(&self.temp_buf[..to_copy]);
@@ -128,7 +141,7 @@ impl RustlsStream {
         // debug!("Processing new packets");
         let io_state = match self.conn.process_new_packets() {
             Ok(state) => {
-                debug!("Processed new packets {:?}", state.plaintext_bytes_to_read());
+                trace!("Processed new packets {:?}", state.plaintext_bytes_to_read());
                 state
             }
             Err(e) => {
@@ -188,7 +201,7 @@ impl RustlsStream {
         // If we need to read more data, try again
         if self.conn.wants_read() {
             trace!("Wants read");
-            return self.read(buf);
+            return self.read_inner(buf);
         }
 
         // Force send data to clear buffer
@@ -206,7 +219,7 @@ impl RustlsStream {
         Ok(0)
     }
 
-    pub fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write_inner(&mut self, buf: &[u8]) -> io::Result<usize> {
         let mut total_written = 0;
 
         // Check if there's data in buffer to send
@@ -305,6 +318,22 @@ impl RustlsStream {
 
         // Close TCP connection
         self.stream.shutdown(std::net::Shutdown::Both)
+    }
+}
+
+impl Read for RustlsStream {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.read_inner(buf)
+    }
+}
+
+impl Write for RustlsStream {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.write_inner(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.stream.flush()
     }
 }
 
