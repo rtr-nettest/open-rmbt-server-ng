@@ -44,7 +44,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set version in Cargo.toml
-      run: sed -i "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
+      run: perl -pi -e "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
 
     - name: Install system dependencies
       run: |
@@ -95,7 +95,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set version in Cargo.toml
-      run: sed -i "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
+      run: perl -pi -e "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
 
     - name: Install system dependencies
       run: |
@@ -144,7 +144,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set version in Cargo.toml
-      run: sed -i "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
+      run: perl -pi -e "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -184,7 +184,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set version in Cargo.toml
-      run: sed -i "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
+      run: perl -pi -e "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -224,7 +224,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set version in Cargo.toml
-      run: sed -i "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
+      run: perl -pi -e "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -270,7 +270,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set version in Cargo.toml
-      run: sed -i "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
+      run: perl -pi -e "s/^version = .*/version = \"${{ needs.determine-version.outputs.version }}\"/" Cargo.toml
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
