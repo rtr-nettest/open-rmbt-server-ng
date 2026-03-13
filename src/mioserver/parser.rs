@@ -91,6 +91,10 @@ pub fn parse_args(
                 print_help();
                 std::process::exit(0);
             }
+            "-v" | "--version" => {
+                println!("nettest {}", env!("CARGO_PKG_VERSION"));
+                std::process::exit(0);
+            }
             _ => {
                 eprintln!("Error: Unknown option '{}'\n", args[i]);
                 print_help();
@@ -165,4 +169,5 @@ fn print_help() {
     println!("    -register       Enable server registration with control server");
     println!("    -mdns           Enable mDNS service discovery for local network");
     println!("    -h, --help      Show this help message");
+    println!("    -v, --version   Print version and exit");
 }

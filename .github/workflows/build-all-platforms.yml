@@ -19,7 +19,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -60,7 +63,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -100,7 +106,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -136,7 +145,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -172,7 +184,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -214,7 +229,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -258,7 +276,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         apt-get update
@@ -305,7 +326,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         apt-get update
@@ -352,7 +376,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         apt-get update
@@ -399,7 +426,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         apt-get update
@@ -444,7 +474,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -490,7 +523,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -539,7 +575,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         apt-get update
@@ -590,7 +629,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         apt-get update
@@ -644,7 +686,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         dnf update -y
@@ -691,7 +736,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         dnf update -y
@@ -738,7 +786,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         dnf update -y
@@ -785,7 +836,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         dnf update -y
@@ -832,7 +886,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         dnf update -y
@@ -879,7 +936,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Set version in Cargo.toml
+      run: sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+
     - name: Install system dependencies
       run: |
         dnf update -y
