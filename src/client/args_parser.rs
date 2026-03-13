@@ -97,6 +97,10 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
                 print_help();
                 std::process::exit(0);
             }
+            "-v" | "--version" => {
+                println!("nettest {}", env!("CARGO_PKG_VERSION"));
+                std::process::exit(0);
+            }
             _ => {
                 eprintln!("Error: Unknown option '{}'\n", args[i]);
                 print_help();
@@ -158,4 +162,5 @@ pub fn print_help() {
     println!("    -legacy         Use legacy PUT command instead of PUTTIMERESULT");
     println!("    -log LEVEL      Set log level: info, debug, trace");
     println!("    -h, --help      Show this help message");
+    println!("    -v, --version   Print version and exit");
 }

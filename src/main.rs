@@ -44,6 +44,9 @@ async fn main() -> Result<(), Box<dyn StdError + Send + Sync>> {
         info!("Server stopping...");
         mio_server.shutdown().await?;
         info!("Server stopped");
+    } else if args[1] == "-v" || args[1] == "--version" {
+        println!("nettest {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
     } else {
         let is_help = args[1] == "-h" || args[1] == "--help";
         if !is_help {
@@ -57,6 +60,7 @@ async fn main() -> Result<(), Box<dyn StdError + Send + Sync>> {
         println!("For detailed help:");
         println!("    nettest -c -h        Show client options");
         println!("    nettest -s -h        Show server options");
+        println!("    nettest -v           Print version and exit");
         if !is_help {
             std::process::exit(1);
         }
