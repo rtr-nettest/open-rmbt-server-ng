@@ -9,7 +9,7 @@ use std::io;
 use crate::client::handlers::basic_handler::{
     handle_client_readable_data, handle_client_writable_data,
 };
-use crate::config::constants::MIN_CHUNK_SIZE;
+use crate::client::constants::{MIN_CHUNK_SIZE};
 use crate::stream::stream::Stream;
 
 pub const ONE_SECOND_NS: u128 = 1_000_000_000;
@@ -46,6 +46,14 @@ pub enum TestPhase {
     PerfSendLastChunk,
     PerfReceiveTime,
     PerfCompleted,
+
+    PutSendCommand,
+    PutReceiveOk,
+    PutSendChunks,
+    PutReceiveTimeBytes,
+    PutSendLastChunk,
+    PutReceiveFinalTime,
+    PutCompleted,
 
     SignedResultSend,
     SignedResultReceive,
@@ -231,6 +239,17 @@ impl TestState {
         Ok(())
     }
 
+    pub fn run_put(&mut self) -> Result<()> {
+        self.measurement_state.phase = TestPhase::PutSendCommand;
+        self.measurement_state.stream.reregister(
+            &mut self.poll,
+            self.measurement_state.token,
+            Interest::WRITABLE,
+        )?;
+        self.process_phase(TestPhase::PutCompleted, ONE_SECOND_NS * 10)?;
+        Ok(())
+    }
+
     fn process_phase(
         &mut self,
         phase: TestPhase,
@@ -277,7 +296,7 @@ impl TestState {
                 match should_remove {
                     Ok(n) => {
                         if n == 0 {
-                            trace!("No data to read");
+                            info!("No data to read for token {:?} phase: {:?}", self.measurement_state.token, self.measurement_state.phase);
                             self.measurement_state.failed = true;
                         }
                         // If n > 0, continue processing
@@ -287,7 +306,7 @@ impl TestState {
                         continue;
                     }
                     Err(e) => {
-                        trace!("Error: {:?}", e);
+                        info!("Error: {:?} for token {:?} phase: {:?}", e, self.measurement_state.token, self.measurement_state.phase);
                         self.measurement_state.failed = true;
                         break;
                     }

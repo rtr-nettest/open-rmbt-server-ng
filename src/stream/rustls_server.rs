@@ -151,7 +151,9 @@ impl RustlsServerStream {
         }
 
         trace!("No data to copy");
-        // If we need to read more data, try again
+        // If rustls needs more network data to complete a TLS record, read more immediately.
+        // This is essential for edge-triggered epoll (MIO): if data is already in the socket
+        // buffer, EPOLLET won't fire a new event unless we drain it here.
         if self.conn.wants_read() {
             trace!("Wants read");
             return self.read(buf);

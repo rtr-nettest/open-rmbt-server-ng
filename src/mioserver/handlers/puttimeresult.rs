@@ -38,6 +38,7 @@ pub fn handle_put_time_result_send_ok(poll: &Poll, state: &mut TestState) -> io:
             state
                 .stream
                 .reregister(poll, state.token, Interest::READABLE)?;
+            
             return Ok(n);
         }
     }
@@ -47,7 +48,6 @@ pub fn handle_put_time_result_receive_chunk(
     poll: &Poll,
     state: &mut TestState,
 ) -> io::Result<usize> {
-    trace!("handle_put_time_result_receive_chunk");
     loop {
         let n = state
             .stream
@@ -60,7 +60,6 @@ pub fn handle_put_time_result_receive_chunk(
         state.total_bytes_received += n as u64;
         trace!("Read {} bytes", state.read_pos);
         if state.read_pos == state.chunk_size {
-            trace!("Chunk size reached");
             let tt = state.clock.unwrap().elapsed().as_nanos();
             state
                     .bytes_received

@@ -21,6 +21,7 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
         signed_result: default_config.signed_result,
         client_uuid: default_config.client_uuid,
         git_hash: None,
+        legacy: false,
     };
 
 
@@ -65,6 +66,9 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
             "-signed" => {
                 config.signed_result = true;
             }
+            "-legacy" => {
+                config.legacy = true;
+            }
             "-git-hash" => {
                 i += 1;
                 if i < args.len() {
@@ -91,6 +95,10 @@ pub async fn parse_args(args: Vec<String>, default_config: FileConfig) -> Result
             }
             "--help" | "-h" => {
                 print_help();
+                std::process::exit(0);
+            }
+            "-v" | "--version" => {
+                println!("nettest {}", env!("CARGO_PKG_VERSION"));
                 std::process::exit(0);
             }
             _ => {
@@ -151,6 +159,8 @@ pub fn print_help() {
     println!("    -raw            Output results in parseable format: ping/download/upload");
     println!("    -save           Save results to control server");
     println!("    -signed         Request signed result from server");
+    println!("    -legacy         Use legacy PUT command instead of PUTTIMERESULT");
     println!("    -log LEVEL      Set log level: info, debug, trace");
     println!("    -h, --help      Show this help message");
+    println!("    -v, --version   Print version and exit");
 }

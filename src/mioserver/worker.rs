@@ -227,10 +227,7 @@ impl Worker {
     }
 
     fn process_all_connections(&mut self) -> io::Result<()> {
-        if let Err(e) = self
-            .poll
-            .poll(&mut self.events, Some(std::time::Duration::from_millis(10)))
-        {
+        if let Err(e) = self.poll.poll(&mut self.events, Some(Duration::from_millis(1))) {
             info!("Worker {}: Poll error: {}", self.id, e);
             return Err(e);
         }
@@ -278,7 +275,8 @@ impl Worker {
                     Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
                         trace!(
                             "Worker {}: would block for token {:?}",
-                            self.id, event_token
+                            self.id,
+                            event_token
                         );
                         continue;
                     }
